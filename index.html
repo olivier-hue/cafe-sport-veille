@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Café du Sport Business — Saisie articles</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff; --bg2: #f5f4f0; --bg3: #eceae4;
+  --text: #1a1a18; --text2: #6b6a65; --text3: #a09e99;
+  --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+  --info-bg: #e6f1fb; --info-border: rgba(24,95,165,0.3); --info-text: #185fa5;
+  --success-bg: #eaf3de; --success-border: rgba(59,109,17,0.3); --success-text: #3b6d11;
+  --warn-bg: #faeeda; --warn-border: rgba(186,117,23,0.3); --warn-text: #854f0b;
+  --danger-bg: #fcebeb; --danger-border: rgba(163,45,45,0.3); --danger-text: #a32d2d;
+  --radius: 8px; --radius-lg: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e1c; --bg2: #2a2a28; --bg3: #333330;
+    --text: #f0efe9; --text2: #a09e99; --text3: #6b6a65;
+    --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.22);
+    --info-bg: #042c53; --info-border: rgba(55,138,221,0.3); --info-text: #85b7eb;
+    --success-bg: #173404; --success-border: rgba(99,153,34,0.3); --success-text: #97c459;
+    --warn-bg: #412402; --warn-border: rgba(239,159,39,0.3); --warn-text: #ef9f27;
+    --danger-bg: #501313; --danger-border: rgba(226,75,74,0.3); --danger-text: #f09595;
+  }
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; display: flex; justify-content: center; padding: 2rem 1rem 4rem; }
+.card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; width: 100%; max-width: 620px; height: fit-content; }
+.app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--border); }
+.app-title { font-size: 13px; font-weight: 500; color: var(--text2); }
+.sync-badge { font-size: 11px; padding: 2px 7px; border-radius: 4px; color: var(--text3); }
+.sync-badge.syncing { color: var(--info-text); }
+.sync-badge.error { color: var(--danger-text); }
+.lbl { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+.field { margin-bottom: 10px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+input[type="url"], select { width: 100%; height: 36px; padding: 0 10px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); outline: none; appearance: none; -webkit-appearance: none; }
+input:focus, select:focus { box-shadow: 0 0 0 2px var(--info-border); border-color: var(--info-border); }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+.url-wrap { position: relative; }
+.url-wrap input { padding-right: 90px; }
+.hint { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; padding: 2px 7px; border-radius: 4px; pointer-events: none; display: none; white-space: nowrap; }
+.hint.full { display: block; background: var(--success-bg); border: 0.5px solid var(--success-border); color: var(--success-text); }
+.hint.partial { display: block; background: var(--warn-bg); border: 0.5px solid var(--warn-border); color: var(--warn-text); }
+.ind-wrap { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.ind-btn { height: 32px; min-width: 40px; padding: 0 9px; font-size: 15px; cursor: pointer; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); font-family: inherit; transition: background 0.1s; }
+.ind-btn:hover { background: var(--bg2); }
+.ind-btn.sm { font-size: 12px; font-weight: 500; }
+.ind-btn.muted { color: var(--text2); font-size: 12px; }
+.ind-btn.ae { background: var(--info-bg); border-color: var(--info-border); }
+.ind-btn.ac { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
+.sep { width: 1px; height: 24px; background: var(--border2); flex-shrink: 0; }
+.add-btn { width: 100%; height: 38px; font-size: 14px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); font-family: inherit; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.1s; }
+.add-btn:hover:not(:disabled) { background: var(--bg2); }
+.add-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
+.list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.list-title { font-size: 13px; font-weight: 500; color: var(--text2); }
+.clear-btn { font-size: 12px; color: var(--text2); background: none; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 3px 9px; cursor: pointer; font-family: inherit; transition: background 0.1s; }
+.clear-btn:hover { color: var(--danger-text); border-color: var(--danger-border); background: var(--danger-bg); }
+.entry-list { display: flex; flex-direction: column; gap: 6px; }
+.entry { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 13px; }
+.entry-badges { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: var(--bg); border: 0.5px solid var(--border); color: var(--text2); white-space: nowrap; }
+.badge.cat { background: var(--info-bg); border-color: var(--info-border); color: var(--info-text); }
+.badge.ctr { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
+.entry-url { color: var(--text2); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.entry-link { color: var(--text3); text-decoration: none; font-size: 13px; line-height: 1; flex-shrink: 0; }
+.entry-link:hover { color: var(--info-text); }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 13px; padding: 4px 5px; border-radius: 4px; line-height: 1; flex-shrink: 0; transition: background 0.1s; }
+.del-btn:hover { color: var(--danger-text); background: var(--danger-bg); }
+.copy-btn { width: 100%; height: 38px; font-size: 14px; cursor: pointer; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); margin-top: 10px; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 7px; transition: background 0.1s; }
+.copy-btn:hover { background: var(--bg2); }
+.copy-btn.ok { color: var(--success-text); border-color: var(--success-border); }
+.empty-state { text-align: center; padding: 1.5rem 0; color: var(--text3); font-size: 13px; }
+.skeleton { background: var(--bg2); border-radius: var(--radius); height: 44px; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="app-header">
+    <span class="app-title">☕ Café du Sport Business — Saisie articles</span>
+    <span class="sync-badge" id="sync-badge"></span>
+  </div>
+  <div class="field url-wrap">
+    <div class="lbl">URL de l'article</div>
+    <input type="url" id="url" placeholder="Coller l'URL ici…" autocomplete="off" />
+    <span class="hint" id="hint"></span>
+  </div>
+  <div class="field-row">
+    <div>
+      <div class="lbl">Langue (col. C)</div>
+      <select id="langue">
+        <option value="">Français (vide)</option>
+        <option value="(en)">(en) Anglais</option>
+        <option value="(de)">(de) Allemand</option>
+        <option value="(it)">(it) Italien</option>
+        <option value="(nl)">(nl) Néerlandais</option>
+        <option value="(es)">(es) Espagnol</option>
+        <option value="(pt)">(pt) Portugais</option>
+      </select>
+    </div>
+    <div>
+      <div class="lbl">Catégorie (col. F)</div>
+      <select id="categorie"><option value="">— Catégorie —</option></select>
+    </div>
+  </div>
+  <div class="field">
+    <div class="lbl">Indicateur (col. D)</div>
+    <div class="ind-wrap">
+      <div id="grp-emoji" style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button class="ind-btn muted ae" data-val="">∅</button>
+        <button class="ind-btn" data-val="💰" title="Paywall">💰</button>
+        <button class="ind-btn" data-val="🔒" title="Contenu protégé">🔒</button>
+        <button class="ind-btn" data-val="📽️" title="Vidéo">📽️</button>
+        <button class="ind-btn" data-val="🎙️" title="Audio / Podcast">🎙️</button>
+        <button class="ind-btn" data-val="🚨" title="Ambigu">🚨</button>
+      </div>
+      <div class="sep"></div>
+      <div id="grp-contract" style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button class="ind-btn sm muted" data-val="">∅</button>
+        <button class="ind-btn sm" data-val="CDI">CDI</button>
+        <button class="ind-btn sm" data-val="CDD">CDD</button>
+        <button class="ind-btn sm" data-val="Freelance">Freelance</button>
+        <button class="ind-btn sm" data-val="Alternance">Alt.</button>
+        <button class="ind-btn sm" data-val="Stage">Stage</button>
+      </div>
+    </div>
+  </div>
+  <button class="add-btn" id="add-btn" disabled>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    Ajouter à la liste
+  </button>
+  <hr />
+  <div class="list-header">
+    <span class="list-title" id="list-title">Liste</span>
+    <button class="clear-btn" id="clear-btn" style="display:none;">Vider la liste</button>
+  </div>
+  <div id="entry-list" class="entry-list">
+    <div class="skeleton"></div>
+    <div class="skeleton" style="opacity:.6"></div>
+    <div class="skeleton" style="opacity:.3"></div>
+  </div>
+  <div id="copy-wrap" style="display:none;">
+    <button class="copy-btn" id="copy-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copier le TSV pour Google Sheets
+    </button>
+  </div>
+</div>
+
+<script>
+// ── Config Supabase ───────────────────────────────────────────────────
+const SB_URL = 'https://htufjjctlblfbmysyofx.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0dWZqamN0bGJsZmJteXN5b2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NDI3ODgsImV4cCI6MjA5NDMxODc4OH0.hb3DJWap4MKG8rnkI1AsDmKqrAuubQEZKpYbDD4px2I';
+const HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+
+async function sbGet() {
+  const r = await fetch(SB_URL + '/rest/v1/articles?select=*&order=position.asc,created_at.asc', { headers: HEADERS });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbInsert(row) {
+  const r = await fetch(SB_URL + '/rest/v1/articles', { method: 'POST', headers: HEADERS, body: JSON.stringify(row) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbDelete(id) {
+  const r = await fetch(SB_URL + '/rest/v1/articles?id=eq.' + id, { method: 'DELETE', headers: HEADERS });
+  if (!r.ok) throw new Error(await r.text());
+}
+async function sbDeleteAll() {
+  const r = await fetch(SB_URL + '/rest/v1/articles?id=not.is.null', { method: 'DELETE', headers: HEADERS });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+// ── Catégories ────────────────────────────────────────────────────────
+const CATS = ["Activation","Alpes 2030","Ambush","Athlétisme","Aviron","Badminton","Basketball","Boxe","Branding","Campagne","Canoë-Kayak","Catch","Chiffre","Cyclisme","Danse","Emploi","Equitation","Escalade","Escrime","eSport","Faits divers","Fitness","Football","Football US","Golf","Gymnastique","Handball","Hippisme","Hockey-sur-Glace","Hommes & Femmes","Insolite","Institutions","International","Judo","Karate","LA28","Marques & Entreprises","Médias","Merchandising","Milan Cortina 2026","MMA","Natation","Paris 2024","Patinage artistique","Pétanque","Podcast","RSE","Rugby","Ski","Sponsoring","Sports de combat","Sports de glisse","Sports mécaniques","Squash","Stades & Arenas","Sumo","Tennis / Padel","Tennis de table","Tir","Tous les sports","Trail","Triathlon","Vidéo","Voile","Volleyball"];
+const catSel = document.getElementById('categorie');
+CATS.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
+
+// ── Détection URL ─────────────────────────────────────────────────────
+const DOMAIN_CAT = {
+  'rugbyrama.fr':'Rugby','lnr.fr':'Rugby','ffr.fr':'Rugby',
+  'ffbb.com':'Basketball','lnb.fr':'Basketball','basket-infos.fr':'Basketball',
+  'sofoot.com':'Football','footmercato.net':'Football','ligue1.fr':'Football','lfp.fr':'Football','fff.fr':'Football',
+  'fft.fr':'Tennis / Padel','padel-magazine.com':'Tennis / Padel',
+  'ffhandball.fr':'Handball','handball-planet.com':'Handball',
+  'cyclismactu.net':'Cyclisme','velo101.com':'Cyclisme',
+  'esport-mag.fr':'eSport','millenium.org':'eSport',
+  'stades.fr':'Stades & Arenas',
+  'sportbuzzbusiness.fr':'Marques & Entreprises','sportstrategies.com':'Sponsoring',
+  'filieresport.com':'Institutions',
+};
+const DOMAIN_LANG = {
+  'bbc.co.uk':'(en)','theguardian.com':'(en)','sportspromedia.com':'(en)',
+  'sportbusiness.com':'(en)','theathletic.com':'(en)','espn.com':'(en)',
+  'sportico.com':'(en)','frontofficesports.com':'(en)','sportbusinessjournal.com':'(en)',
+  'marca.com':'(es)','mundodeportivo.com':'(es)',
+  'gazzetta.it':'(it)','corrieredellosport.it':'(it)',
+  'sportschau.de':'(de)','kicker.de':'(de)',
+};
+const CONTRACT_RULES = [
+  [/\bcdi\b/i,'CDI'],[/\bcdd\b/i,'CDD'],[/\bstage\b/i,'Stage'],
+  [/\balternance\b/i,'Alternance'],[/\bfreelance\b/i,'Freelance'],
+];
+const SLUG_RULES = [
+  [/\/jobs?\b|\/job\/|\/emplois?\/|\/offres?\/|recrutement|\/recrute|\/careers?\/|nous[-_]rejoindre|rejoindre[-_]nous|\/postuler|workable\.com|welcometothejungle|linkedin\.com\/jobs/i,'Emploi'],
+  [/\bfootball\b|\/ligue[-_]?[12]\b|\bfoot\b/i,'Football'],
+  [/football[-_]us|\/nfl\b|super[-_]bowl/i,'Football US'],
+  [/\brugby\b|top[-_]?14\b|pro[-_]?d2\b/i,'Rugby'],
+  [/\bbasket(ball)?\b|\/nba\b|euroleague/i,'Basketball'],
+  [/\bcyclisme\b|tour[-_]de[-_]france|\/vtt\b/i,'Cyclisme'],
+  [/\btennis\b|roland[-_]garros|wimbledon|\bpadel\b/i,'Tennis / Padel'],
+  [/\bhandball\b/i,'Handball'],[/\bvolleyball\b|\bvolley\b/i,'Volleyball'],
+  [/\bnatation\b/i,'Natation'],[/athl[eé]tisme/i,'Athlétisme'],[/\bgolf\b/i,'Golf'],
+  [/\bski\b|biathlon/i,'Ski'],[/alpes[-_]?2030|jo[-_]?2030/i,'Alpes 2030'],
+  [/milan[-_]cortina/i,'Milan Cortina 2026'],[/paris[-_]?2024|jo[-_]?2024/i,'Paris 2024'],
+  [/\bla[-_]?28\b/i,'LA28'],[/\besport\b|e[-_]sport\b/i,'eSport'],
+  [/\bsponsoring\b|\bpartenariat\b|\bnaming\b/i,'Sponsoring'],
+  [/\bstade[s]?\b|\barena\b/i,'Stades & Arenas'],[/\bm[eé]dias?\b|droits[-_]tv/i,'Médias'],
+  [/\bbranding\b/i,'Branding'],[/\brse\b/i,'RSE'],[/\bcampagne\b/i,'Campagne'],
+  [/startup|marque[s]?\b/i,'Marques & Entreprises'],[/\binstitution/i,'Institutions'],
+  [/\bmma\b|\bufc\b/i,'MMA'],[/\bjudo\b/i,'Judo'],[/\bboxe\b|boxing/i,'Boxe'],
+  [/\bvoile\b/i,'Voile'],[/\btriathlon\b/i,'Triathlon'],[/\btrail\b/i,'Trail'],
+  [/gymnas/i,'Gymnastique'],[/\bescalade\b/i,'Escalade'],[/\bhockey\b/i,'Hockey-sur-Glace'],
+  [/\bpodcast\b/i,'Podcast'],[/\bvid[eé]o\b/i,'Vidéo'],[/\bchiffre[s]?\b|\bbilan\b/i,'Chiffre'],
+  [/\bsumo\b/i,'Sumo'],[/\baviron\b/i,'Aviron'],[/\bescrime\b/i,'Escrime'],
+  [/\bfitness\b/i,'Fitness'],[/\bbadminton\b/i,'Badminton'],[/patinage/i,'Patinage artistique'],
+  [/\bsquash\b/i,'Squash'],[/insolite/i,'Insolite'],[/ambush/i,'Ambush'],[/\bactivation\b/i,'Activation'],
+];
+
+function suggestFromUrl(rawUrl) {
+  try {
+    const u = new URL(rawUrl);
+    const host = u.hostname.replace(/^www\./, '');
+    const full = (host + u.pathname + ' ' + u.search).toLowerCase();
+    let lang = '';
+    if (host.endsWith('.de')||host.endsWith('.at')) lang='(de)';
+    else if (host.endsWith('.it')) lang='(it)';
+    else if (host.endsWith('.es')) lang='(es)';
+    else if (host.endsWith('.nl')) lang='(nl)';
+    else if (host.endsWith('.co.uk')||host.endsWith('.com.au')) lang='(en)';
+    else { for (const [d,l] of Object.entries(DOMAIN_LANG)) { if (host===d||host.endsWith('.'+d)) { lang=l; break; } } }
+    let ind = '';
+    if (/youtube\.com|youtu\.be|dailymotion\.com/.test(host)) ind='📽️';
+    else if (/spotify\.com|podcasts\.apple\.com|soundcloud\.com|deezer\.com/.test(host)) ind='🎙️';
+    else if ((host.includes('lequipe.fr')&&/plus|abonne/.test(u.pathname))||/wsj\.com|ft\.com|theathletic\.com/.test(host)) ind='💰';
+    let contract = '';
+    for (const [rx,c] of CONTRACT_RULES) { if (rx.test(full)) { contract=c; break; } }
+    for (const [d,c] of Object.entries(DOMAIN_CAT)) {
+      if (host===d||host.endsWith('.'+d)) return { cat:c, lang, ind, contract, confidence:'full' };
+    }
+    for (const [rx,c] of SLUG_RULES) {
+      if (rx.test(full)) return { cat:c, lang, ind, contract, confidence:'partial' };
+    }
+    return { cat:'', lang, ind, contract, confidence:'none' };
+  } catch { return { cat:'', lang:'', ind:'', contract:'', confidence:'none' }; }
+}
+
+function cleanUrl(url) {
+  try {
+    const u = new URL(url);
+    ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','fbclid','gclid','ref','source','rcm'].forEach(p => u.searchParams.delete(p));
+    return u.toString().replace(/[?&]$/, '');
+  } catch { return url; }
+}
+
+// ── État ──────────────────────────────────────────────────────────────
+let entries = [];
+let selEmoji = '', selContract = '';
+const syncBadge = document.getElementById('sync-badge');
+
+function setSync(state, msg) {
+  syncBadge.textContent = msg || '';
+  syncBadge.className = 'sync-badge' + (state ? ' ' + state : '');
+}
+
+// ── Supabase load ─────────────────────────────────────────────────────
+async function loadEntries() {
+  try {
+    setSync('syncing', '↻ chargement…');
+    entries = await sbGet();
+    setSync('', '');
+  } catch(e) {
+    setSync('error', '⚠ connexion');
+    entries = [];
+  }
+  renderList();
+}
+
+// ── Indicateurs ───────────────────────────────────────────────────────
+function setEmoji(val) {
+  selEmoji = val;
+  document.querySelectorAll('#grp-emoji .ind-btn').forEach(b => b.classList.toggle('ae', b.dataset.val===val));
+}
+function setContract(val) {
+  selContract = val;
+  document.querySelectorAll('#grp-contract .ind-btn').forEach(b => b.classList.toggle('ac', b.dataset.val===val));
+}
+document.getElementById('grp-emoji').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setEmoji(b.dataset.val); });
+document.getElementById('grp-contract').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setContract(b.dataset.val); });
+
+// ── URL input ─────────────────────────────────────────────────────────
+const urlInput = document.getElementById('url');
+const addBtn   = document.getElementById('add-btn');
+const hint     = document.getElementById('hint');
+
+function applyDetection(url) {
+  const { cat, lang, ind, contract, confidence } = suggestFromUrl(url);
+  if (lang) document.getElementById('langue').value = lang;
+  if (ind) setEmoji(ind);
+  if (contract) setContract(contract);
+  if (cat) {
+    document.getElementById('categorie').value = cat;
+    hint.textContent = (confidence==='full' ? '✓ ' : '~ ') + cat;
+    hint.className = 'hint ' + (confidence==='full' ? 'full' : 'partial');
+  } else { hint.className = 'hint'; }
+}
+
+function resetForm() {
+  urlInput.value = ''; document.getElementById('langue').value = ''; catSel.value = '';
+  setEmoji(''); setContract(''); addBtn.disabled = true; hint.className = 'hint';
+}
+
+urlInput.addEventListener('paste', e => {
+  setTimeout(() => {
+    const cleaned = cleanUrl(urlInput.value.trim());
+    urlInput.value = cleaned; addBtn.disabled = !cleaned;
+    applyDetection(cleaned);
+  }, 10);
+});
+urlInput.addEventListener('input', () => { addBtn.disabled = !urlInput.value.trim(); hint.className = 'hint'; });
+
+// ── Ajouter ───────────────────────────────────────────────────────────
+addBtn.addEventListener('click', async () => {
+  const url = urlInput.value.trim(); if (!url) return;
+  addBtn.disabled = true;
+  const row = {
+    url,
+    langue: document.getElementById('langue').value,
+    indicateur: [selEmoji, selContract].filter(Boolean).join(' '),
+    categorie: document.getElementById('categorie').value,
+    position: entries.length ? Math.max(...entries.map(e => e.position || 0)) + 1 : 1,
+  };
+  try {
+    setSync('syncing', '↻ sauvegarde…');
+    const [saved] = await sbInsert(row);
+    entries.push(saved);
+    setSync('', '');
+    renderList();
+    resetForm();
+  } catch(e) {
+    setSync('error', '⚠ erreur sauvegarde');
+    addBtn.disabled = false;
+  }
+});
+
+// ── Vider ─────────────────────────────────────────────────────────────
+document.getElementById('clear-btn').addEventListener('click', async () => {
+  if (!confirm('Vider toute la liste ?')) return;
+  try {
+    setSync('syncing', '↻ suppression…');
+    await sbDeleteAll();
+    entries = [];
+    setSync('', '');
+    renderList();
+  } catch(e) { setSync('error', '⚠ erreur suppression'); }
+});
+
+// ── Rendu ─────────────────────────────────────────────────────────────
+function renderList() {
+  const el     = document.getElementById('entry-list');
+  const wrap   = document.getElementById('copy-wrap');
+  const clearB = document.getElementById('clear-btn');
+  document.getElementById('list-title').textContent = entries.length ? 'Liste (' + entries.length + ')' : 'Liste';
+  clearB.style.display = entries.length ? '' : 'none';
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty-state">Aucun article ajouté pour l\'instant</div>';
+    wrap.style.display = 'none'; return;
+  }
+  wrap.style.display = 'block';
+  el.innerHTML = entries.map((e) => {
+    const domain = (() => { try { return new URL(e.url).hostname.replace(/^www\./,''); } catch { return e.url; } })();
+    const ind = e.indicateur || '';
+    const ctr = (ind.match(/CDI|CDD|Freelance|Alternance|Stage/) || [''])[0];
+    const emj = ind.replace(/CDI|CDD|Freelance|Alternance|Stage/g,'').trim();
+    return '<div class="entry" data-id="' + e.id + '">'
+      + '<div class="entry-badges">'
+      + (e.langue ? '<span class="badge">' + e.langue + '</span>' : '')
+      + (emj ? '<span class="badge">' + emj + '</span>' : '')
+      + (ctr ? '<span class="badge ctr">' + ctr + '</span>' : '')
+      + (e.categorie ? '<span class="badge cat">' + e.categorie + '</span>' : '')
+      + '</div>'
+      + '<span class="entry-url" title="' + e.url + '">' + domain + '</span>'
+      + '<a href="' + e.url + '" target="_blank" rel="noopener" class="entry-link" aria-label="Ouvrir">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+      + '</a>'
+      + '<button class="del-btn" data-id="' + e.id + '" aria-label="Supprimer">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>'
+      + '</button></div>';
+  }).join('');
+
+  el.querySelectorAll('.del-btn').forEach(b => {
+    b.addEventListener('click', async () => {
+      const id = b.dataset.id;
+      b.disabled = true;
+      try {
+        setSync('syncing', '↻');
+        await sbDelete(id);
+        entries = entries.filter(e => e.id !== id);
+        setSync('', '');
+        renderList();
+      } catch(e) { setSync('error', '⚠ erreur'); b.disabled = false; }
+    });
+  });
+}
+
+// ── Copier TSV ────────────────────────────────────────────────────────
+document.getElementById('copy-btn').addEventListener('click', () => {
+  const tsv = entries.map(e => (e.langue||'') + '\t' + (e.indicateur||'') + '\t' + e.url + '\t' + (e.categorie||'') + ' ').join('\n');
+  navigator.clipboard.writeText(tsv).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.classList.add('ok');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copié !';
+    setTimeout(() => {
+      btn.classList.remove('ok');
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copier le TSV pour Google Sheets';
+    }, 2000);
+  });
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+loadEntries();
+</script>
+</body>
+</html>
