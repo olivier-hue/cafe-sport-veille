@@ -308,6 +308,7 @@ function setEmoji(val) {
 function setContract(val) {
   selContract = val;
   document.querySelectorAll('#grp-contract .ind-btn').forEach(b => b.classList.toggle('ac', b.dataset.val===val));
+  if (val) document.getElementById('categorie').value = 'Emploi';
 }
 document.getElementById('grp-emoji').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setEmoji(b.dataset.val); });
 document.getElementById('grp-contract').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setContract(b.dataset.val); });
@@ -449,6 +450,14 @@ document.getElementById('copy-btn').addEventListener('click', () => {
 });
 
 // ── Init ──────────────────────────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const prefilledUrl = params.get('url');
+if (prefilledUrl) {
+  const cleaned = cleanUrl(prefilledUrl);
+  urlInput.value = cleaned;
+  addBtn.disabled = false;
+  applyDetection(cleaned);
+}
 loadEntries();
 </script>
 </body>
