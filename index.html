@@ -178,7 +178,8 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
 async function sbGet() {
-  const r = await fetch(SB_URL + '/rest/v1/articles?select=*&order=position.asc,created_at.asc', { headers: HEADERS });
+  // NOUVEAU : On ne récupère que les articles où is_published est faux
+  const r = await fetch(SB_URL + '/rest/v1/articles?is_published=eq.false&select=*&order=position.asc,created_at.asc', { headers: HEADERS });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -192,7 +193,12 @@ async function sbDelete(id) {
   if (!r.ok) throw new Error(await r.text());
 }
 async function sbDeleteAll() {
-  const r = await fetch(SB_URL + '/rest/v1/articles?id=not.is.null', { method: 'DELETE', headers: HEADERS });
+  // NOUVEAU : On passe is_published à true au lieu de supprimer
+  const r = await fetch(SB_URL + '/rest/v1/articles?is_published=eq.false', { 
+    method: 'PATCH', 
+    headers: HEADERS,
+    body: JSON.stringify({ is_published: true })
+  });
   if (!r.ok) throw new Error(await r.text());
 }
 
