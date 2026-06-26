@@ -40,8 +40,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sa
 .lbl { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
 .field { margin-bottom: 10px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-input[type="url"], select { width: 100%; height: 36px; padding: 0 10px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); outline: none; appearance: none; -webkit-appearance: none; }
-input:focus, select:focus { box-shadow: 0 0 0 2px var(--info-border); border-color: var(--info-border); }
+input[type="url"], input[type="text"], select { 
+  width: 100%; height: 36px; padding: 0 10px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); outline: none; appearance: none; -webkit-appearance: none; 
+}input:focus, select:focus { box-shadow: 0 0 0 2px var(--info-border); border-color: var(--info-border); }
 select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
 .url-wrap { position: relative; }
 .url-wrap input { padding-right: 90px; }
@@ -101,12 +102,6 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
     <input type="url" id="url" placeholder="Coller l'URL ici…" autocomplete="off" />
     <span class="hint" id="hint"></span>
   </div>
-  <div class="field url-wrap">
-    <div class="lbl">URL de l'article</div>
-    <input type="url" id="url" placeholder="Coller l'URL ici…" autocomplete="off" />
-    <span class="hint" id="hint"></span>
-  </div>
-
   <div class="field">
     <div class="lbl">Titre de l'article</div>
     <input type="text" id="titre" placeholder="Saisir le titre (ex: post LinkedIn)..." autocomplete="off" />
