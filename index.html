@@ -101,6 +101,19 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
     <input type="url" id="url" placeholder="Coller l'URL ici…" autocomplete="off" />
     <span class="hint" id="hint"></span>
   </div>
+  <div class="field url-wrap">
+    <div class="lbl">URL de l'article</div>
+    <input type="url" id="url" placeholder="Coller l'URL ici…" autocomplete="off" />
+    <span class="hint" id="hint"></span>
+  </div>
+
+  <div class="field">
+    <div class="lbl">Titre de l'article</div>
+    <input type="text" id="titre" placeholder="Saisir le titre (ex: post LinkedIn)..." autocomplete="off" />
+  </div>
+  <div class="field" style="display: none;"> <div class="lbl">URL de l'Image</div>
+    <input type="url" id="image_url" placeholder="Lien de l'image..." autocomplete="off" />
+  </div>
   <div class="field-row">
     <div>
       <div class="lbl">Langue (col. C)</div>
@@ -186,6 +199,33 @@ async function sbDelete(id) {
 async function sbDeleteAll() {
   const r = await fetch(SB_URL + '/rest/v1/articles?id=not.is.null', { method: 'DELETE', headers: HEADERS });
   if (!r.ok) throw new Error(await r.text());
+}
+
+async function fetchOgData(url) {
+  const titreInput = document.getElementById('titre');
+  const imgInput = document.getElementById('image_url');
+  
+  try {
+    titreInput.placeholder = "⏳ Récupération du titre...";
+    
+    // API publique gratuite pour contourner les restrictions CORS
+    const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+    const json = await res.json();
+    
+    if (json.status === 'success' && json.data) {
+      // On remplit seulement si le champ est vide (pour ne pas écraser une saisie manuelle)
+      if (json.data.title && !titreInput.value) {
+        titreInput.value = json.data.title;
+      }
+      if (json.data.image?.url && !imgInput.value) {
+        imgInput.value = json.data.image.url;
+      }
+    }
+  } catch (e) {
+    console.error("Erreur lors de la récupération des balises OG", e);
+  } finally {
+    titreInput.placeholder = "Saisir le titre (ex: post LinkedIn)...";
+  }
 }
 
 // ── Catégories ────────────────────────────────────────────────────────
@@ -334,7 +374,11 @@ function applyDetection(url) {
 }
 
 function resetForm() {
-  urlInput.value = ''; document.getElementById('langue').value = ''; catSel.value = '';
+  urlInput.value = ''; 
+  document.getElementById('titre').value = ''; // NOUVEAU
+  document.getElementById('image_url').value = ''; // NOUVEAU
+  document.getElementById('langue').value = ''; 
+  catSel.value = '';
   setEmoji(''); setContract(''); addBtn.disabled = true; hint.className = 'hint';
 }
 
@@ -343,6 +387,9 @@ urlInput.addEventListener('paste', e => {
     const cleaned = cleanUrl(urlInput.value.trim());
     urlInput.value = cleaned; addBtn.disabled = !cleaned;
     applyDetection(cleaned);
+      if (cleaned) {
+      fetchOgData(cleaned);
+    }
   }, 10);
 });
 urlInput.addEventListener('input', () => { addBtn.disabled = !urlInput.value.trim(); hint.className = 'hint'; });
@@ -353,6 +400,8 @@ addBtn.addEventListener('click', async () => {
   addBtn.disabled = true;
   const row = {
     url,
+    title: document.getElementById('titre').value.trim() || null, // NOUVEAU
+    image_url: document.getElementById('image_url').value.trim() || null, // NOUVEAU
     langue: document.getElementById('langue').value,
     indicateur: [selEmoji, selContract].filter(Boolean).join(' '),
     categorie: document.getElementById('categorie').value,
