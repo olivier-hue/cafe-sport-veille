@@ -484,7 +484,14 @@ function renderList() {
 
 // ── Copier TSV ────────────────────────────────────────────────────────
 document.getElementById('copy-btn').addEventListener('click', () => {
-  const tsv = entries.map(e => (e.langue||'') + '\t' + (e.indicateur||'') + '\t' + e.url + '\t' + (e.categorie||'') + ' ').join('\n');
+  const tsv = entries.map(e => 
+    (e.title ? e.title.replace(/\t|\n/g, ' ') : '') + '\t' + 
+    (e.langue || '') + '\t' + 
+    (e.indicateur || '') + '\t' + 
+    e.url + '\t' + 
+    (e.categorie || '') + ' '
+  ).join('\n');
+  
   navigator.clipboard.writeText(tsv).then(() => {
     const btn = document.getElementById('copy-btn');
     btn.classList.add('ok');
