@@ -201,14 +201,12 @@ async function fetchOgData(url) {
   const imgInput = document.getElementById('image_url');
   
   try {
-    titreInput.placeholder = "⏳ Récupération du titre...";
+    titreInput.placeholder = "⏳ Récupération par Microlink (2-3s)...";
     
-    // API publique gratuite pour contourner les restrictions CORS
     const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
     const json = await res.json();
     
     if (json.status === 'success' && json.data) {
-      // On remplit seulement si le champ est vide (pour ne pas écraser une saisie manuelle)
       if (json.data.title && !titreInput.value) {
         titreInput.value = json.data.title;
       }
@@ -217,9 +215,11 @@ async function fetchOgData(url) {
       }
     }
   } catch (e) {
-    console.error("Erreur lors de la récupération des balises OG", e);
+    console.error("Erreur Microlink", e);
   } finally {
-    titreInput.placeholder = "Saisir le titre (ex: post LinkedIn)...";
+    if (!titreInput.value) {
+      titreInput.placeholder = "Saisir le titre (ex: post LinkedIn)...";
+    }
   }
 }
 
