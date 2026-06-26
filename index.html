@@ -201,42 +201,25 @@ async function fetchOgData(url) {
   const imgInput = document.getElementById('image_url');
   
   try {
-    titreInput.placeholder = "⚡ Récupération express...";
+    titreInput.placeholder = "⏳ Récupération du titre...";
     
-    // On utilise un proxy ultra-léger qui renvoie juste le code HTML brut instantanément
-    const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-    if (!res.ok) throw new Error("Proxy error");
+    // API publique gratuite pour contourner les restrictions CORS
+    const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+    const json = await res.json();
     
-    const html = await res.text();
-    
-    // Nos Regex faites maison pour lire le HTML
-    const getMeta = (prop) => {
-      const match = html.match(new RegExp(`<meta[^>]*property=["'](?:og:)?${prop}["'][^>]*content=["']([^"']+)["']`, 'i')) ||
-                    html.match(new RegExp(`<meta[^>]*name=["'](?:og:)?${prop}["'][^>]*content=["']([^"']+)["']`, 'i'));
-      return match ? match[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') : null;
-    };
-
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const standardTitle = titleMatch ? titleMatch[1] : null;
-
-    // Extraction
-    const foundTitle = getMeta('title') || standardTitle;
-    const foundImage = getMeta('image');
-    
-    // Remplissage
-    if (foundTitle && !titreInput.value) {
-      titreInput.value = foundTitle.trim();
-    }
-    if (foundImage && !imgInput.value) {
-      imgInput.value = foundImage.trim();
+    if (json.status === 'success' && json.data) {
+      // On remplit seulement si le champ est vide (pour ne pas écraser une saisie manuelle)
+      if (json.data.title && !titreInput.value) {
+        titreInput.value = json.data.title;
+      }
+      if (json.data.image?.url && !imgInput.value) {
+        imgInput.value = json.data.image.url;
+      }
     }
   } catch (e) {
-    console.error("Erreur lors de la récupération express", e);
+    console.error("Erreur lors de la récupération des balises OG", e);
   } finally {
-    // On remet le placeholder d'origine si on n'a rien trouvé
-    if (!titreInput.value) {
-      titreInput.placeholder = "Saisir le titre (ex: post LinkedIn)...";
-    }
+    titreInput.placeholder = "Saisir le titre (ex: post LinkedIn)...";
   }
 }
 
