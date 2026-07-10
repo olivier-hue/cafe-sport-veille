@@ -49,6 +49,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .hint { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; padding: 2px 7px; border-radius: 4px; pointer-events: none; display: none; white-space: nowrap; }
 .hint.full { display: block; background: var(--success-bg); border: 0.5px solid var(--success-border); color: var(--success-text); }
 .hint.partial { display: block; background: var(--warn-bg); border: 0.5px solid var(--warn-border); color: var(--warn-text); }
+.hint.danger { display: block; background: var(--danger-bg); border: 0.5px solid var(--danger-border); color: var(--danger-text); }
 .ind-wrap { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .ind-btn { height: 32px; min-width: 40px; padding: 0 9px; font-size: 15px; cursor: pointer; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); font-family: inherit; transition: background 0.1s; }
 .ind-btn:hover { background: var(--bg2); }
@@ -200,6 +201,13 @@ async function sbDeleteAll() {
     body: JSON.stringify({ is_published: true })
   });
   if (!r.ok) throw new Error(await r.text());
+}
+
+async function sbCheckDuplicate(url) {
+  const r = await fetch(SB_URL + '/rest/v1/articles?url=eq.' + encodeURIComponent(url) + '&select=id', { headers: HEADERS });
+  if (!r.ok) throw new Error(await r.text());
+  const data = await r.json();
+  return data.length > 0; // Retourne true si l'URL existe déjà
 }
 
 async function fetchOgData(url) {
@@ -383,32 +391,73 @@ function resetForm() {
   setEmoji(''); setContract(''); addBtn.disabled = true; hint.className = 'hint';
 }
 
-urlInput.addEventListener('paste', e => {
-  setTimeout(() => {
-    const cleaned = cleanUrl(urlInput.value.trim());
-    urlInput.value = cleaned; addBtn.disabled = !cleaned;
-    applyDetection(cleaned);
-      if (cleaned) {
-      fetchOgData(cleaned);
+let urlCheckTimeout;
+
+async function handleUrlChange() {
+  const url = urlInput.value.trim();
+  const cleaned = cleanUrl(url);
+  
+  // Auto-nettoyage du champ
+  if (url !== cleaned && cleaned !== '') urlInput.value = cleaned;
+
+  if (!cleaned) {
+    addBtn.disabled = true;
+    hint.className = 'hint';
+    return;
+  }
+
+  // 1. Détection locale immédiate (Catégories)
+  applyDetection(cleaned);
+
+  // 2. Vérification dans la base de données
+  setSync('syncing', '↻ vérification…');
+  try {
+    const isDuplicate = await sbCheckDuplicate(cleaned);
+    
+    if (isDuplicate) {
+      setSync('', '');
+      hint.textContent = '⚠ Déjà en base';
+      hint.className = 'hint danger';
+      addBtn.disabled = true; // On bloque le bouton
+      return; // On arrête là, on ne charge pas Microlink
     }
-  }, 10);
+    
+    // 3. Si c'est bon, on active le bouton et on cherche le titre
+    setSync('', '');
+    addBtn.disabled = false;
+    fetchOgData(cleaned);
+
+  } catch (e) {
+    setSync('error', '⚠ erreur réseau');
+  }
+}
+
+// Déclenchement au coller (très rapide)
+urlInput.addEventListener('paste', () => setTimeout(handleUrlChange, 50));
+
+// Déclenchement à la frappe (avec un délai de 500ms pour ne pas spammer la base de données)
+urlInput.addEventListener('input', () => {
+  addBtn.disabled = true; // On bloque par sécurité pendant la frappe
+  clearTimeout(urlCheckTimeout);
+  urlCheckTimeout = setTimeout(handleUrlChange, 500);
 });
-urlInput.addEventListener('input', () => { addBtn.disabled = !urlInput.value.trim(); hint.className = 'hint'; });
 
 // ── Ajouter ───────────────────────────────────────────────────────────
 addBtn.addEventListener('click', async () => {
   const url = urlInput.value.trim(); if (!url) return;
   addBtn.disabled = true;
-  const row = {
-    url,
-    title: document.getElementById('titre').value.trim() || null, // NOUVEAU
-    image_url: document.getElementById('image_url').value.trim() || null, // NOUVEAU
-    langue: document.getElementById('langue').value,
-    indicateur: [selEmoji, selContract].filter(Boolean).join(' '),
-    categorie: document.getElementById('categorie').value,
-    position: entries.length ? Math.max(...entries.map(e => e.position || 0)) + 1 : 1,
-  };
+  
   try {
+    const row = {
+      url,
+      title: document.getElementById('titre').value.trim() || null,
+      image_url: document.getElementById('image_url').value.trim() || null,
+      langue: document.getElementById('langue').value,
+      indicateur: [selEmoji, selContract].filter(Boolean).join(' '),
+      categorie: document.getElementById('categorie').value,
+      position: entries.length ? Math.max(...entries.map(e => e.position || 0)) + 1 : 1,
+    };
+
     setSync('syncing', '↻ sauvegarde…');
     const [saved] = await sbInsert(row);
     entries.push(saved);
