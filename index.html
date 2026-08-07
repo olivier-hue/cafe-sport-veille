@@ -51,6 +51,8 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .hint.partial { display: block; background: var(--warn-bg); border: 0.5px solid var(--warn-border); color: var(--warn-text); }
 .hint.danger { display: block; background: var(--danger-bg); border: 0.5px solid var(--danger-border); color: var(--danger-text); }
 .ind-wrap { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+#grp-country { gap: 4px; }
+#grp-country .ind-btn { min-width: 0; padding: 0 7px; height: 36px; }
 .ind-btn { height: 32px; min-width: 40px; padding: 0 9px; font-size: 15px; cursor: pointer; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); font-family: inherit; transition: background 0.1s; }
 .ind-btn:hover { background: var(--bg2); }
 .ind-btn.sm { font-size: 12px; font-weight: 500; }
@@ -112,7 +114,7 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
   </div>
   <div class="field-row">
     <div>
-      <div class="lbl">Langue (col. C)</div>
+      <div class="lbl" id="lbl-c">Langue (col. C)</div>
       <select id="langue">
         <option value="">Français (vide)</option>
         <option value="(en)">(en) Anglais</option>
@@ -122,6 +124,14 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
         <option value="(es)">(es) Espagnol</option>
         <option value="(pt)">(pt) Portugais</option>
       </select>
+      <div id="grp-country" class="ind-wrap" style="display:none;">
+        <button class="ind-btn muted ac" data-val="" title="France">∅</button>
+        <button class="ind-btn" data-val="🇨🇭" title="Suisse">🇨🇭</button>
+        <button class="ind-btn" data-val="🇧🇪" title="Belgique">🇧🇪</button>
+        <button class="ind-btn" data-val="🇨🇦" title="Canada / Québec">🇨🇦</button>
+        <button class="ind-btn" data-val="🇱🇺" title="Luxembourg">🇱🇺</button>
+        <button class="ind-btn" data-val="🌍" title="Autre pays">🌍</button>
+      </div>
     </div>
     <div>
       <div class="lbl">Catégorie (col. F)</div>
@@ -238,7 +248,7 @@ async function fetchOgData(url) {
 }
 
 // ── Catégories ────────────────────────────────────────────────────────
-const CATS = ["Activation","Alpes 2030","Ambush","Athlétisme","Aviron","Badminton","Basketball","Boxe","Branding","Campagne","Canoë-Kayak","Catch","Chiffre","Cyclisme","Danse","Emploi","Equitation","Escalade","Escrime","eSport","Faits divers","Fitness","Football","Football US","Golf","Gymnastique","Handball","Hippisme","Hockey-sur-Glace","Hommes & Femmes","Insolite","Institutions","International","Judo","Karate","LA28","Marques & Entreprises","Médias","Merchandising","Milan Cortina 2026","MMA","Natation","Paris 2024","Patinage artistique","Pétanque","Podcast","RSE","Rugby","Ski","Sponsoring","Sports de combat","Sports de glisse","Sports mécaniques","Squash","Stades & Arenas","Sumo","Tennis / Padel","Tennis de table","Tir","Tous les sports","Trail","Triathlon","Vidéo","Voile","Volleyball"];
+const CATS = ["Activation","Alpes 2030","Ambush","Athlétisme","Aviron","Badminton","Basketball","Boxe","Branding","Campagne","Canoë-Kayak","Catch","Chiffre","Cyclisme","Danse","Emploi","Equitation","Escalade","Escrime","eSport","Faits divers","Fitness","Football","Football US","Golf","Gymnastique","Handball","Hippisme","Hockey-sur-Glace","Hommes & Femmes","Insolite","Institutions","International","Judo","Karate","LA28","Marques & Entreprises","Médias","Merchandising","Milan Cortina 2026","MMA","Natation","Paris 2024","Patinage artistique","Pétanque","Podcast","RSE","Rugby","Ski","Sponsoring","Sports de combat","Sports de glisse","Sports mécaniques","Squash","Stades & Arenas","Sumo","Tahiti 2027","Tennis / Padel","Tennis de table","Tir","Tous les sports","Trail","Triathlon","Vidéo","Voile","Volleyball"];
 const catSel = document.getElementById('categorie');
 CATS.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
 
@@ -263,12 +273,23 @@ const DOMAIN_LANG = {
   'gazzetta.it':'(it)','corrieredellosport.it':'(it)',
   'sportschau.de':'(de)','kicker.de':'(de)',
 };
+// Pays d'une offre d'emploi (col. C). Vide = France.
+// Ces règles ne s'appliquent qu'aux lignes de catégorie « Emploi » : hors Emploi,
+// la colonne C garde son rôle de marqueur de langue.
+const DOMAIN_COUNTRY = {
+  'fifa.com':'🇨🇭','uefa.com':'🇨🇭','olympics.com':'🇨🇭','ioc.org':'🇨🇭',
+  'jobup.ch':'🇨🇭','jobs.ch':'🇨🇭','jobscout24.ch':'🇨🇭',
+  'lesoir.be':'🇧🇪','stepstone.be':'🇧🇪','references.be':'🇧🇪',
+  'wada-ama.org':'🇨🇦','jobboom.com':'🇨🇦','jobillico.com':'🇨🇦','isarta.com':'🇨🇦',
+  'moovijob.com':'🇱🇺','jobs.lu':'🇱🇺',
+};
+const TLD_COUNTRY = [['.ch','🇨🇭'],['.be','🇧🇪'],['.ca','🇨🇦'],['.lu','🇱🇺']];
 const CONTRACT_RULES = [
   [/\bcdi\b/i,'CDI'],[/\bcdd\b/i,'CDD'],[/\bstage\b/i,'Stage'],
   [/\balternance\b/i,'Alternance'],[/\bfreelance\b/i,'Freelance'],
 ];
 const SLUG_RULES = [
-  [/\/jobs?\b|\/job\/|\/emplois?\/|\/offres?\/|recrutement|\/recrute|\/careers?\/|nous[-_]rejoindre|rejoindre[-_]nous|\/postuler|workable\.com|welcometothejungle|linkedin\.com\/jobs/i,'Emploi'],
+  [/\/jobs?\b|\/job\/|\/emplois?\/|offres?[-_]emplois?|\/offres?\/|recrutement|\/recrute|\/careers?\/|nous[-_]rejoindre|rejoindre[-_]nous|\/postuler|workable\.com|welcometothejungle|linkedin\.com\/jobs/i,'Emploi'],
   [/\bfootball\b|\/ligue[-_]?[12]\b|\bfoot\b/i,'Football'],
   [/football[-_]us|\/nfl\b|super[-_]bowl/i,'Football US'],
   [/\brugby\b|top[-_]?14\b|pro[-_]?d2\b/i,'Rugby'],
@@ -278,6 +299,7 @@ const SLUG_RULES = [
   [/\bhandball\b/i,'Handball'],[/\bvolleyball\b|\bvolley\b/i,'Volleyball'],
   [/\bnatation\b/i,'Natation'],[/athl[eé]tisme/i,'Athlétisme'],[/\bgolf\b/i,'Golf'],
   [/\bski\b|biathlon/i,'Ski'],[/alpes[-_]?2030|jo[-_]?2030/i,'Alpes 2030'],
+  [/tahiti[-_]?2027/i,'Tahiti 2027'],
   [/milan[-_]cortina/i,'Milan Cortina 2026'],[/paris[-_]?2024|jo[-_]?2024/i,'Paris 2024'],
   [/\bla[-_]?28\b/i,'LA28'],[/\besport\b|e[-_]sport\b/i,'eSport'],
   [/\bsponsoring\b|\bpartenariat\b|\bnaming\b/i,'Sponsoring'],
@@ -311,14 +333,17 @@ function suggestFromUrl(rawUrl) {
     else if ((host.includes('lequipe.fr')&&/plus|abonne/.test(u.pathname))||/wsj\.com|ft\.com|theathletic\.com/.test(host)) ind='💰';
     let contract = '';
     for (const [rx,c] of CONTRACT_RULES) { if (rx.test(full)) { contract=c; break; } }
+    let country = '';
+    for (const [d,c] of Object.entries(DOMAIN_COUNTRY)) { if (host===d||host.endsWith('.'+d)) { country=c; break; } }
+    if (!country) { for (const [t,c] of TLD_COUNTRY) { if (host.endsWith(t)) { country=c; break; } } }
     for (const [d,c] of Object.entries(DOMAIN_CAT)) {
-      if (host===d||host.endsWith('.'+d)) return { cat:c, lang, ind, contract, confidence:'full' };
+      if (host===d||host.endsWith('.'+d)) return { cat:c, lang, ind, contract, country, confidence:'full' };
     }
     for (const [rx,c] of SLUG_RULES) {
-      if (rx.test(full)) return { cat:c, lang, ind, contract, confidence:'partial' };
+      if (rx.test(full)) return { cat:c, lang, ind, contract, country, confidence:'partial' };
     }
-    return { cat:'', lang, ind, contract, confidence:'none' };
-  } catch { return { cat:'', lang:'', ind:'', contract:'', confidence:'none' }; }
+    return { cat:'', lang, ind, contract, country, confidence:'none' };
+  } catch { return { cat:'', lang:'', ind:'', contract:'', country:'', confidence:'none' }; }
 }
 
 function cleanUrl(url) {
@@ -331,7 +356,7 @@ function cleanUrl(url) {
 
 // ── État ──────────────────────────────────────────────────────────────
 let entries = [];
-let selEmoji = '', selContract = '';
+let selEmoji = '', selContract = '', selCountry = '';
 const syncBadge = document.getElementById('sync-badge');
 
 function setSync(state, msg) {
@@ -361,9 +386,25 @@ function setContract(val) {
   selContract = val;
   document.querySelectorAll('#grp-contract .ind-btn').forEach(b => b.classList.toggle('ac', b.dataset.val===val));
   if (val) document.getElementById('categorie').value = 'Emploi';
+  syncColC();
 }
+function setCountry(val) {
+  selCountry = val;
+  document.querySelectorAll('#grp-country .ind-btn').forEach(b => b.classList.toggle('ac', b.dataset.val===val));
+}
+// Col. C = pays sur les offres d'emploi, langue partout ailleurs.
+function isEmploi() { return document.getElementById('categorie').value === 'Emploi'; }
+function syncColC() {
+  const emploi = isEmploi();
+  document.getElementById('lbl-c').textContent = emploi ? 'Pays (col. C)' : 'Langue (col. C)';
+  document.getElementById('langue').style.display = emploi ? 'none' : '';
+  document.getElementById('grp-country').style.display = emploi ? 'flex' : 'none';
+}
+function valueColC() { return isEmploi() ? selCountry : document.getElementById('langue').value; }
 document.getElementById('grp-emoji').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setEmoji(b.dataset.val); });
 document.getElementById('grp-contract').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setContract(b.dataset.val); });
+document.getElementById('grp-country').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setCountry(b.dataset.val); });
+catSel.addEventListener('change', syncColC);
 
 // ── URL input ─────────────────────────────────────────────────────────
 const urlInput = document.getElementById('url');
@@ -371,7 +412,7 @@ const addBtn   = document.getElementById('add-btn');
 const hint     = document.getElementById('hint');
 
 function applyDetection(url) {
-  const { cat, lang, ind, contract, confidence } = suggestFromUrl(url);
+  const { cat, lang, ind, contract, country, confidence } = suggestFromUrl(url);
   if (lang) document.getElementById('langue').value = lang;
   if (ind) setEmoji(ind);
   if (contract) setContract(contract);
@@ -380,15 +421,18 @@ function applyDetection(url) {
     hint.textContent = (confidence==='full' ? '✓ ' : '~ ') + cat;
     hint.className = 'hint ' + (confidence==='full' ? 'full' : 'partial');
   } else { hint.className = 'hint'; }
+  syncColC();
+  if (country && isEmploi()) setCountry(country);
 }
 
 function resetForm() {
   urlInput.value = ''; 
   document.getElementById('titre').value = ''; // NOUVEAU
   document.getElementById('image_url').value = ''; // NOUVEAU
-  document.getElementById('langue').value = ''; 
+  document.getElementById('langue').value = '';
   catSel.value = '';
-  setEmoji(''); setContract(''); addBtn.disabled = true; hint.className = 'hint';
+  setEmoji(''); setContract(''); setCountry(''); syncColC();
+  addBtn.disabled = true; hint.className = 'hint';
 }
 
 let urlCheckTimeout;
@@ -452,7 +496,7 @@ addBtn.addEventListener('click', async () => {
       url,
       title: document.getElementById('titre').value.trim() || null,
       image_url: document.getElementById('image_url').value.trim() || null,
-      langue: document.getElementById('langue').value,
+      langue: valueColC(),
       indicateur: [selEmoji, selContract].filter(Boolean).join(' '),
       categorie: document.getElementById('categorie').value,
       position: entries.length ? Math.max(...entries.map(e => e.position || 0)) + 1 : 1,
@@ -562,6 +606,7 @@ document.getElementById('copy-btn').addEventListener('click', () => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
+syncColC();
 const params = new URLSearchParams(window.location.search);
 const prefilledUrl = params.get('url');
 if (prefilledUrl) {
