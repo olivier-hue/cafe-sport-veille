@@ -51,6 +51,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .hint.partial { display: block; background: var(--warn-bg); border: 0.5px solid var(--warn-border); color: var(--warn-text); }
 .hint.danger { display: block; background: var(--danger-bg); border: 0.5px solid var(--danger-border); color: var(--danger-text); }
 .ind-wrap { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+#btn-intl { width: 100%; margin-top: 5px; height: 30px; }
 #grp-country { gap: 4px; }
 #grp-country .ind-btn { min-width: 0; padding: 0 7px; height: 36px; }
 .ind-btn { height: 32px; min-width: 40px; padding: 0 9px; font-size: 15px; cursor: pointer; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); font-family: inherit; transition: background 0.1s; }
@@ -150,6 +151,7 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
     <div>
       <div class="lbl">Catégorie (col. F)</div>
       <select id="categorie"><option value="">— Catégorie —</option></select>
+      <button class="ind-btn sm" id="btn-intl" type="button" title="Basculer la catégorie sur International">🌐 International</button>
     </div>
   </div>
   <div class="field">
@@ -444,12 +446,18 @@ function syncColC() {
   document.getElementById('lbl-c').textContent = emploi ? 'Pays (col. C)' : 'Langue (col. C)';
   document.getElementById('langue').style.display = emploi ? 'none' : '';
   document.getElementById('grp-country').style.display = emploi ? 'flex' : 'none';
+  document.getElementById('btn-intl').classList.toggle('ac', document.getElementById('categorie').value === 'International');
 }
 function valueColC() { return isEmploi() ? selCountry : document.getElementById('langue').value; }
 document.getElementById('grp-emoji').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setEmoji(b.dataset.val); });
 document.getElementById('grp-contract').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setContract(b.dataset.val); });
 document.getElementById('grp-country').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setCountry(b.dataset.val); });
 catSel.addEventListener('change', syncColC);
+// Raccourci : « International » est la catégorie la moins bien détectée depuis l'URL.
+document.getElementById('btn-intl').addEventListener('click', () => {
+  catSel.value = catSel.value === 'International' ? '' : 'International';
+  syncColC();
+});
 
 // ── URL input ─────────────────────────────────────────────────────────
 const urlInput = document.getElementById('url');
