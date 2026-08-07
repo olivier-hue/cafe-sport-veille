@@ -248,7 +248,7 @@ async function fetchOgData(url) {
 }
 
 // ── Catégories ────────────────────────────────────────────────────────
-const CATS = ["Activation","Alpes 2030","Ambush","Athlétisme","Aviron","Badminton","Basketball","Boxe","Branding","Campagne","Canoë-Kayak","Catch","Chiffre","Cyclisme","Danse","Emploi","Equitation","Escalade","Escrime","eSport","Faits divers","Fitness","Football","Football US","Golf","Gymnastique","Handball","Hippisme","Hockey-sur-Glace","Hommes & Femmes","Insolite","Institutions","International","Judo","Karate","LA28","Marques & Entreprises","Médias","Merchandising","Milan Cortina 2026","MMA","Natation","Paris 2024","Patinage artistique","Pétanque","Podcast","RSE","Rugby","Ski","Sponsoring","Sports de combat","Sports de glisse","Sports mécaniques","Squash","Stades & Arenas","Sumo","Tennis / Padel","Tennis de table","Tir","Tous les sports","Trail","Triathlon","Vidéo","Voile","Volleyball"];
+const CATS = ["Activation","Alpes 2030","Ambush","Athlétisme","Aviron","Badminton","Basketball","Boxe","Branding","Campagne","Canoë-Kayak","Catch","Chiffre","Cyclisme","Danse","Emploi","Equitation","Escalade","Escrime","eSport","Faits divers","Fitness","Football","Football US","Golf","Gymnastique","Handball","Hippisme","Hockey-sur-Glace","Hommes & Femmes","Insolite","Institutions","International","Judo","Karate","LA28","Marques & Entreprises","Médias","Merchandising","Milan Cortina 2026","MMA","Natation","Paris 2024","Patinage artistique","Pétanque","Podcast","RSE","Rugby","Ski","Sponsoring","Sports de combat","Sports de glisse","Sports mécaniques","Squash","Stades & Arenas","Sumo","Tahiti 2027","Tennis / Padel","Tennis de table","Tir","Tous les sports","Trail","Triathlon","Vidéo","Voile","Volleyball"];
 const catSel = document.getElementById('categorie');
 CATS.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
 
@@ -299,6 +299,7 @@ const SLUG_RULES = [
   [/\bhandball\b/i,'Handball'],[/\bvolleyball\b|\bvolley\b/i,'Volleyball'],
   [/\bnatation\b/i,'Natation'],[/athl[eé]tisme/i,'Athlétisme'],[/\bgolf\b/i,'Golf'],
   [/\bski\b|biathlon/i,'Ski'],[/alpes[-_]?2030|jo[-_]?2030/i,'Alpes 2030'],
+  [/tahiti[-_]?2027/i,'Tahiti 2027'],
   [/milan[-_]cortina/i,'Milan Cortina 2026'],[/paris[-_]?2024|jo[-_]?2024/i,'Paris 2024'],
   [/\bla[-_]?28\b/i,'LA28'],[/\besport\b|e[-_]sport\b/i,'eSport'],
   [/\bsponsoring\b|\bpartenariat\b|\bnaming\b/i,'Sponsoring'],
