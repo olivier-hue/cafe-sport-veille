@@ -64,6 +64,9 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .add-btn { width: 100%; height: 38px; font-size: 14px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); font-family: inherit; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.1s; }
 .add-btn:hover:not(:disabled) { background: var(--bg2); }
 .add-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.add-btn.update-mode { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+.dup-banner { display: none; margin-bottom: 10px; padding: 10px 12px; border-radius: var(--radius); background: var(--warn-bg); border: 0.5px solid var(--warn-border); color: var(--warn-text); font-size: 13px; line-height: 1.4; }
+.dup-banner.visible { display: block; }
 .pdf-btn { width: 100%; height: 38px; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--info-bg); color: var(--info-text); border: 0.5px solid var(--info-border); border-radius: var(--radius); font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 7px; transition: background 0.1s, opacity 0.1s; }
 .pdf-btn:hover:not(:disabled) { opacity: 0.85; }
 .pdf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -107,6 +110,7 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
     <span class="app-title">☕ Café du Sport Business — Saisie articles</span>
     <span class="sync-badge" id="sync-badge"></span>
   </div>
+  <div class="dup-banner" id="dup-banner" role="status"></div>
   <div class="field url-wrap">
     <div class="lbl">URL de l'article</div>
     <input type="url" id="url" placeholder="Coller l'URL ici…" autocomplete="off" />
@@ -178,7 +182,7 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
   </div>
   <button class="add-btn" id="add-btn" disabled>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-    Ajouter à la liste
+    <span id="add-btn-label">Ajouter à la liste</span>
   </button>
   <hr />
   <div class="list-header">
@@ -204,15 +208,9 @@ const SB_URL = 'https://htufjjctlblfbmysyofx.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0dWZqamN0bGJsZmJteXN5b2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NDI3ODgsImV4cCI6MjA5NDMxODc4OH0.hb3DJWap4MKG8rnkI1AsDmKqrAuubQEZKpYbDD4px2I';
 const HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
-// ── Config Supabase Storage (PDF) ─────────────────────────────────────
-// Prérequis côté Supabase : créer un bucket "pdfs" en public
-//   Dashboard > Storage > New bucket > name "pdfs" > coche "Public bucket"
-// (les uploads utilisent la clé anon ; adapte les policies Storage si besoin)
 const SB_BUCKET = 'pdfs';
 
-// Upload un fichier PDF vers Supabase Storage et renvoie son URL publique.
 async function uploadPdfToSupabase(file, onProgress) {
-  // Nom unique pour éviter les collisions : horodatage + nom nettoyé
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const path = Date.now() + '_' + safeName;
 
@@ -236,13 +234,27 @@ async function uploadPdfToSupabase(file, onProgress) {
 }
 
 async function sbGet() {
-  // NOUVEAU : On ne récupère que les articles où is_published est faux
   const r = await fetch(SB_URL + '/rest/v1/articles?is_published=eq.false&select=*&order=position.asc,created_at.asc', { headers: HEADERS });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 async function sbInsert(row) {
   const r = await fetch(SB_URL + '/rest/v1/articles', { method: 'POST', headers: HEADERS, body: JSON.stringify(row) });
+  if (!r.ok) {
+    const text = await r.text();
+    const err = new Error(text);
+    err.status = r.status;
+    err.body = text;
+    throw err;
+  }
+  return r.json();
+}
+async function sbUpdate(id, patch) {
+  const r = await fetch(SB_URL + '/rest/v1/articles?id=eq.' + encodeURIComponent(id), {
+    method: 'PATCH',
+    headers: HEADERS,
+    body: JSON.stringify(patch),
+  });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -251,32 +263,41 @@ async function sbDelete(id) {
   if (!r.ok) throw new Error(await r.text());
 }
 async function sbDeleteAll() {
-  // NOUVEAU : On passe is_published à true au lieu de supprimer
-  const r = await fetch(SB_URL + '/rest/v1/articles?is_published=eq.false', { 
-    method: 'PATCH', 
+  const r = await fetch(SB_URL + '/rest/v1/articles?is_published=eq.false', {
+    method: 'PATCH',
     headers: HEADERS,
     body: JSON.stringify({ is_published: true })
   });
   if (!r.ok) throw new Error(await r.text());
 }
 
+/** Retourne l'article existant (même URL exacte) ou null. */
 async function sbCheckDuplicate(url) {
-  const r = await fetch(SB_URL + '/rest/v1/articles?url=eq.' + encodeURIComponent(url) + '&select=id', { headers: HEADERS });
+  const r = await fetch(
+    SB_URL + '/rest/v1/articles?url=eq.' + encodeURIComponent(url) +
+    '&select=id,url,title,categorie,indicateur,langue,image_url,is_published',
+    { headers: HEADERS }
+  );
   if (!r.ok) throw new Error(await r.text());
   const data = await r.json();
-  return data.length > 0; // Retourne true si l'URL existe déjà
+  return data[0] || null;
+}
+
+function isUniqueViolation(err) {
+  const body = (err && (err.body || err.message)) || '';
+  return /23505|duplicate key|unique/i.test(String(body));
 }
 
 async function fetchOgData(url) {
   const titreInput = document.getElementById('titre');
   const imgInput = document.getElementById('image_url');
-  
+
   try {
     titreInput.placeholder = "⏳ Récupération par Microlink (2-3s)...";
-    
+
     const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
     const json = await res.json();
-    
+
     if (json.status === 'success' && json.data) {
       if (json.data.title && !titreInput.value) {
         titreInput.value = json.data.title;
@@ -294,12 +315,10 @@ async function fetchOgData(url) {
   }
 }
 
-// ── Catégories ────────────────────────────────────────────────────────
 const CATS = ["Activation","Alpes 2030","Ambush","Athlétisme","Aviron","Badminton","Basketball","Boxe","Branding","Campagne","Canoë-Kayak","Catch","Chiffre","Cyclisme","Danse","Emploi","Equitation","Escalade","Escrime","eSport","Faits divers","Fitness","Football","Football US","Golf","Gymnastique","Handball","Hippisme","Hockey-sur-Glace","Hommes & Femmes","Insolite","Institutions","International","Judo","Karate","LA28","Marques & Entreprises","Médias","Merchandising","Milan Cortina 2026","MMA","Natation","Paris 2024","Patinage artistique","Pétanque","Podcast","RSE","Rugby","Ski","Sponsoring","Sports de combat","Sports de glisse","Sports mécaniques","Squash","Stades & Arenas","Sumo","Tahiti 2027","Tennis / Padel","Tennis de table","Tir","Tous les sports","Trail","Triathlon","Vidéo","Voile","Volleyball"];
 const catSel = document.getElementById('categorie');
 CATS.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
 
-// ── Détection URL ─────────────────────────────────────────────────────
 const DOMAIN_CAT = {
   'rugbyrama.fr':'Rugby','lnr.fr':'Rugby','ffr.fr':'Rugby',
   'ffbb.com':'Basketball','lnb.fr':'Basketball','basket-infos.fr':'Basketball',
@@ -320,9 +339,6 @@ const DOMAIN_LANG = {
   'gazzetta.it':'(it)','corrieredellosport.it':'(it)',
   'sportschau.de':'(de)','kicker.de':'(de)',
 };
-// Pays d'une offre d'emploi (col. C). Vide = France.
-// Ces règles ne s'appliquent qu'aux lignes de catégorie « Emploi » : hors Emploi,
-// la colonne C garde son rôle de marqueur de langue.
 const DOMAIN_COUNTRY = {
   'fifa.com':'🇨🇭','uefa.com':'🇨🇭','olympics.com':'🇨🇭','ioc.org':'🇨🇭',
   'jobup.ch':'🇨🇭','jobs.ch':'🇨🇭','jobscout24.ch':'🇨🇭',
@@ -401,17 +417,52 @@ function cleanUrl(url) {
   } catch { return url; }
 }
 
-// ── État ──────────────────────────────────────────────────────────────
 let entries = [];
 let selEmoji = '', selContract = '', selCountry = '';
+/** @type {{ id: string, is_published?: boolean } | null} */
+let pendingDup = null;
 const syncBadge = document.getElementById('sync-badge');
+const dupBanner = document.getElementById('dup-banner');
+const addBtnLabel = document.getElementById('add-btn-label');
 
 function setSync(state, msg) {
   syncBadge.textContent = msg || '';
   syncBadge.className = 'sync-badge' + (state ? ' ' + state : '');
 }
 
-// ── Supabase load ─────────────────────────────────────────────────────
+function setAddMode(mode) {
+  // mode: 'add' | 'update'
+  if (mode === 'update') {
+    addBtn.classList.add('update-mode');
+    addBtnLabel.textContent = 'Mettre à jour l\'existant';
+  } else {
+    addBtn.classList.remove('update-mode');
+    addBtnLabel.textContent = 'Ajouter à la liste';
+  }
+}
+
+function showDupBanner(existing) {
+  pendingDup = existing;
+  const pub = existing.is_published ? ' (déjà publié)' : ' (brouillon)';
+  const prev = existing.title
+    ? 'Titre actuel : « ' + existing.title + ' ».'
+    : 'Sans titre pour l\'instant.';
+  dupBanner.innerHTML =
+    '<strong>Article déjà en base' + pub + '.</strong><br>' +
+    prev + '<br>' +
+    'Ajuste titre, catégorie ou indicateurs puis clique <em>Mettre à jour l\'existant</em> pour les remplacer.';
+  dupBanner.classList.add('visible');
+  setAddMode('update');
+  addBtn.disabled = false;
+}
+
+function clearDupState() {
+  pendingDup = null;
+  dupBanner.classList.remove('visible');
+  dupBanner.textContent = '';
+  setAddMode('add');
+}
+
 async function loadEntries() {
   try {
     setSync('syncing', '↻ chargement…');
@@ -424,7 +475,6 @@ async function loadEntries() {
   renderList();
 }
 
-// ── Indicateurs ───────────────────────────────────────────────────────
 function setEmoji(val) {
   selEmoji = val;
   document.querySelectorAll('#grp-emoji .ind-btn').forEach(b => b.classList.toggle('ae', b.dataset.val===val));
@@ -439,7 +489,6 @@ function setCountry(val) {
   selCountry = val;
   document.querySelectorAll('#grp-country .ind-btn').forEach(b => b.classList.toggle('ac', b.dataset.val===val));
 }
-// Col. C = pays sur les offres d'emploi, langue partout ailleurs.
 function isEmploi() { return document.getElementById('categorie').value === 'Emploi'; }
 function syncColC() {
   const emploi = isEmploi();
@@ -453,13 +502,11 @@ document.getElementById('grp-emoji').addEventListener('click', e => { const b=e.
 document.getElementById('grp-contract').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setContract(b.dataset.val); });
 document.getElementById('grp-country').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setCountry(b.dataset.val); });
 catSel.addEventListener('change', syncColC);
-// Raccourci : « International » est la catégorie la moins bien détectée depuis l'URL.
 document.getElementById('btn-intl').addEventListener('click', () => {
   catSel.value = catSel.value === 'International' ? '' : 'International';
   syncColC();
 });
 
-// ── URL input ─────────────────────────────────────────────────────────
 const urlInput = document.getElementById('url');
 const addBtn   = document.getElementById('add-btn');
 const hint     = document.getElementById('hint');
@@ -479,13 +526,24 @@ function applyDetection(url) {
 }
 
 function resetForm() {
-  urlInput.value = ''; 
-  document.getElementById('titre').value = ''; // NOUVEAU
-  document.getElementById('image_url').value = ''; // NOUVEAU
+  urlInput.value = '';
+  document.getElementById('titre').value = '';
+  document.getElementById('image_url').value = '';
   document.getElementById('langue').value = '';
   catSel.value = '';
   setEmoji(''); setContract(''); setCountry(''); syncColC();
   addBtn.disabled = true; hint.className = 'hint';
+  clearDupState();
+}
+
+function buildPayload(url) {
+  return {
+    title: document.getElementById('titre').value.trim() || null,
+    image_url: document.getElementById('image_url').value.trim() || null,
+    langue: valueColC(),
+    indicateur: [selEmoji, selContract].filter(Boolean).join(' '),
+    categorie: document.getElementById('categorie').value,
+  };
 }
 
 let urlCheckTimeout;
@@ -493,9 +551,10 @@ let urlCheckTimeout;
 async function handleUrlChange() {
   const url = urlInput.value.trim();
   const cleaned = cleanUrl(url);
-  
-  // Auto-nettoyage du champ
+
   if (url !== cleaned && cleaned !== '') urlInput.value = cleaned;
+
+  clearDupState();
 
   if (!cleaned) {
     addBtn.disabled = true;
@@ -503,25 +562,37 @@ async function handleUrlChange() {
     return;
   }
 
-  // 1. Détection locale immédiate (Catégories)
   applyDetection(cleaned);
 
-  // 2. Vérification dans la base de données
   setSync('syncing', '↻ vérification…');
   try {
-    const isDuplicate = await sbCheckDuplicate(cleaned);
-    
-    if (isDuplicate) {
+    const existing = await sbCheckDuplicate(cleaned);
+
+    if (existing) {
       setSync('', '');
       hint.textContent = '⚠ Déjà en base';
       hint.className = 'hint danger';
-      addBtn.disabled = true; // On bloque le bouton
-      return; // On arrête là, on ne charge pas Microlink
+      showDupBanner(existing);
+      // Préremplit avec les valeurs actuelles pour faciliter l'édition
+      if (existing.title && !document.getElementById('titre').value) {
+        document.getElementById('titre').value = existing.title;
+      }
+      if (existing.categorie) catSel.value = existing.categorie;
+      if (existing.langue) {
+        if (isEmploi()) {
+          // langue stockée peut être un emoji pays
+          setCountry(existing.langue);
+        } else {
+          document.getElementById('langue').value = existing.langue;
+        }
+      }
+      syncColC();
+      return;
     }
-    
-    // 3. Si c'est bon, on active le bouton et on cherche le titre
+
     setSync('', '');
     addBtn.disabled = false;
+    setAddMode('add');
     fetchOgData(cleaned);
 
   } catch (e) {
@@ -529,7 +600,6 @@ async function handleUrlChange() {
   }
 }
 
-// ── Upload PDF vers Supabase Storage ──────────────────────────────────
 const pdfBtn = document.getElementById('pdf-btn');
 const pdfInput = document.getElementById('pdf-input');
 const pdfStatus = document.getElementById('pdf-status');
@@ -558,13 +628,13 @@ pdfInput.addEventListener('change', async () => {
   try {
     const link = await uploadPdfToSupabase(file, (pct) => setPdfStatus('↻ Envoi… ' + pct + '%'));
 
-    // Le PDF devient l'article : son lien public remplit le champ URL.
     urlInput.value = link;
     hint.className = 'hint';
-    // Pré-remplit le titre avec le nom du fichier (sans .pdf) s'il est vide.
     const titreInput = document.getElementById('titre');
     if (!titreInput.value) titreInput.value = file.name.replace(/\.pdf$/i, '');
     addBtn.disabled = false;
+    clearDupState();
+    setAddMode('add');
 
     setPdfStatus('✓ PDF uploadé — lien ajouté au champ URL.', 'ok');
   } catch (e) {
@@ -577,55 +647,81 @@ pdfInput.addEventListener('change', async () => {
   }
 });
 
-// Déclenchement au coller (très rapide)
 urlInput.addEventListener('paste', () => setTimeout(handleUrlChange, 50));
 
-// Déclenchement à la frappe (avec un délai de 500ms pour ne pas spammer la base de données)
 urlInput.addEventListener('input', () => {
-  addBtn.disabled = true; // On bloque par sécurité pendant la frappe
+  addBtn.disabled = true;
+  clearDupState();
   clearTimeout(urlCheckTimeout);
   urlCheckTimeout = setTimeout(handleUrlChange, 500);
 });
 
-// ── Ajouter ───────────────────────────────────────────────────────────
 addBtn.addEventListener('click', async () => {
   const url = urlInput.value.trim(); if (!url) return;
   addBtn.disabled = true;
-  
+
+  const fields = buildPayload(url);
+
   try {
+    // ── Mise à jour d'un doublon ──
+    if (pendingDup && pendingDup.id) {
+      setSync('syncing', '↻ mise à jour…');
+      const [updated] = await sbUpdate(pendingDup.id, fields);
+      // Rafraîchir la liste locale si l'article y est encore (brouillon)
+      const idx = entries.findIndex(e => e.id === pendingDup.id);
+      if (idx >= 0 && updated) entries[idx] = { ...entries[idx], ...updated };
+      setSync('', '');
+      renderList();
+      resetForm();
+      return;
+    }
+
+    // ── Insert normal ──
     const row = {
       url,
-      title: document.getElementById('titre').value.trim() || null,
-      image_url: document.getElementById('image_url').value.trim() || null,
-      langue: valueColC(),
-      indicateur: [selEmoji, selContract].filter(Boolean).join(' '),
-      categorie: document.getElementById('categorie').value,
+      ...fields,
       position: entries.length ? Math.max(...entries.map(e => e.position || 0)) + 1 : 1,
     };
 
     setSync('syncing', '↻ sauvegarde…');
-    const [saved] = await sbInsert(row);
-    entries.push(saved);
-    setSync('', '');
-    renderList();
-    resetForm();
+    try {
+      const [saved] = await sbInsert(row);
+      entries.push(saved);
+      setSync('', '');
+      renderList();
+      resetForm();
+    } catch (insertErr) {
+      // Index unique (URL normalisée) : proposer la mise à jour
+      if (isUniqueViolation(insertErr)) {
+        const existing = await sbCheckDuplicate(url);
+        if (existing) {
+          setSync('', '');
+          hint.textContent = '⚠ Déjà en base';
+          hint.className = 'hint danger';
+          showDupBanner(existing);
+          addBtn.disabled = false;
+          return;
+        }
+      }
+      throw insertErr;
+    }
   } catch(e) {
+    console.error(e);
     setSync('error', '⚠ erreur sauvegarde');
     addBtn.disabled = false;
   }
 });
 
-// ── Vider ─────────────────────────────────────────────────────────────
 document.getElementById('clear-btn').addEventListener('click', () => {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
-  overlay.innerHTML = '<div class="modal"><p class="modal-title">Vider la liste ?</p><p class="modal-sub">Cette action supprimera tous les articles.</p><div class="modal-actions"><button class="modal-cancel">Annuler</button><button class="modal-confirm">Vider</button></div></div>';
+  overlay.innerHTML = '<div class="modal"><p class="modal-title">Vider la liste ?</p><p class="modal-sub">Cette action publiera tous les brouillons (is_published = true).</p><div class="modal-actions"><button class="modal-cancel">Annuler</button><button class="modal-confirm">Vider</button></div></div>';
   document.body.appendChild(overlay);
   overlay.querySelector('.modal-cancel').addEventListener('click', () => overlay.remove());
   overlay.querySelector('.modal-confirm').addEventListener('click', async () => {
     overlay.remove();
     try {
-      setSync('syncing', '↻ suppression…');
+      setSync('syncing', '↻ publication…');
       await sbDeleteAll();
       entries = [];
       setSync('', '');
@@ -634,7 +730,6 @@ document.getElementById('clear-btn').addEventListener('click', () => {
   });
 });
 
-// ── Rendu ─────────────────────────────────────────────────────────────
 function renderList() {
   const el     = document.getElementById('entry-list');
   const wrap   = document.getElementById('copy-wrap');
@@ -682,16 +777,15 @@ function renderList() {
   });
 }
 
-// ── Copier TSV ────────────────────────────────────────────────────────
 document.getElementById('copy-btn').addEventListener('click', () => {
-  const tsv = entries.map(e => 
-    (e.title ? e.title.replace(/\t|\n/g, ' ') : '') + '\t' + 
-    (e.langue || '') + '\t' + 
-    (e.indicateur || '') + '\t' + 
-    e.url + '\t' + 
+  const tsv = entries.map(e =>
+    (e.title ? e.title.replace(/\t|\n/g, ' ') : '') + '\t' +
+    (e.langue || '') + '\t' +
+    (e.indicateur || '') + '\t' +
+    e.url + '\t' +
     (e.categorie || '') + ' '
   ).join('\n');
-  
+
   navigator.clipboard.writeText(tsv).then(() => {
     const btn = document.getElementById('copy-btn');
     btn.classList.add('ok');
@@ -703,7 +797,6 @@ document.getElementById('copy-btn').addEventListener('click', () => {
   });
 });
 
-// ── Init ──────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
@@ -713,8 +806,8 @@ const prefilledUrl = params.get('url');
 if (prefilledUrl) {
   const cleaned = cleanUrl(prefilledUrl);
   urlInput.value = cleaned;
-  addBtn.disabled = false;
   applyDetection(cleaned);
+  handleUrlChange();
 }
 loadEntries();
 </script>
