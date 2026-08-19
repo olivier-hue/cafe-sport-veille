@@ -1,4 +1,4 @@
-const CACHE = 'cdsb-v1';
+const CACHE = 'cdsb-v2';
 
 // Mise en cache des assets au premier chargement
 self.addEventListener('install', e => {
@@ -9,7 +9,11 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(clients.claim());
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => clients.claim())
+  );
 });
 
 // Interception du share_target (POST /share)
