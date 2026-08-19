@@ -189,7 +189,7 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
   </button>
   <hr />
   <div class="list-header">
-    <span class="list-title" id="list-title">Liste</span>
+    <span class="list-title" id="list-title">Liste du jour</span>
     <div class="list-actions">
       <button class="refresh-btn" id="refresh-btn" type="button">Actualiser</button>
       <button class="clear-btn" id="clear-btn" type="button" style="display:none;">Vider la liste</button>
@@ -235,12 +235,24 @@ async function uploadPdfToSupabase(file, onProgress) {
   return SB_URL + '/storage/v1/object/public/' + SB_BUCKET + '/' + encodeURIComponent(path);
 }
 
-/** Charge tous les articles (pas de limite 50). Range large pour dépasser le défaut PostgREST. */
+/** Début de la journée locale (navigateur), en ISO UTC pour PostgREST. */
+function startOfTodayIso() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  return start.toISOString();
+}
+
+/** Articles publiés aujourd'hui uniquement. */
 async function sbGet() {
-  const r = await fetch(
-    SB_URL + '/rest/v1/articles?select=*&order=created_at.desc',
-    { headers: { ...HEADERS, 'Range': '0-9999', 'Prefer': 'count=exact' } }
-  );
+  const since = startOfTodayIso();
+  const qs =
+    'select=*' +
+    '&is_published=eq.true' +
+    '&created_at=gte.' + encodeURIComponent(since) +
+    '&order=created_at.desc';
+  const r = await fetch(SB_URL + '/rest/v1/articles?' + qs, {
+    headers: { ...HEADERS, 'Range': '0-9999', 'Prefer': 'count=exact' },
+  });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -726,7 +738,6 @@ addBtn.addEventListener('click', async () => {
 
 document.getElementById('refresh-btn').addEventListener('click', () => loadEntries());
 
-/** Vider = affichage local uniquement (pas de touche à la base ni à l'app). */
 document.getElementById('clear-btn').addEventListener('click', async () => {
   if (!entries.length) return;
   const ok = await confirmModal({
@@ -766,11 +777,11 @@ function renderList() {
   const wrap = document.getElementById('copy-wrap');
   const clearB = document.getElementById('clear-btn');
   document.getElementById('list-title').textContent = entries.length
-    ? 'Liste (' + entries.length + ')'
-    : 'Liste';
+    ? 'Liste du jour (' + entries.length + ')'
+    : 'Liste du jour';
   clearB.style.display = entries.length ? '' : 'none';
   if (!entries.length) {
-    el.innerHTML = '<div class="empty-state">Aucun article affiché — utilise Actualiser pour recharger depuis la base</div>';
+    el.innerHTML = '<div class="empty-state">Aucun article publié aujourd\'hui — Actualiser recharge la journée</div>';
     wrap.style.display = 'none';
     return;
   }

@@ -1,6 +1,5 @@
-const CACHE = 'cdsb-v2';
+const CACHE = 'cdsb-v3';
 
-// Mise en cache des assets au premier chargement
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll(['/', '/index.html', '/manifest.json']))
@@ -16,14 +15,12 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Interception du share_target (POST /share)
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
   if (url.pathname === '/share' && e.request.method === 'POST') {
     e.respondWith((async () => {
       const data = await e.request.formData();
-      // L'URL partagée peut arriver dans "url", "text" ou "title"
       const shared = data.get('url') || data.get('text') || data.get('title') || '';
       const dest = '/?url=' + encodeURIComponent(shared.trim());
       return Response.redirect(dest, 303);
@@ -31,7 +28,6 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Pour tout le reste : réseau d'abord, cache en fallback
   e.respondWith(
     fetch(e.request).catch(() => caches.match(e.request))
   );
