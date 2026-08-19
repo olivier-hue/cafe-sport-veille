@@ -40,9 +40,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sa
 .lbl { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
 .field { margin-bottom: 10px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-input[type="url"], input[type="text"], select { 
-  width: 100%; height: 36px; padding: 0 10px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); outline: none; appearance: none; -webkit-appearance: none; 
-}input:focus, select:focus { box-shadow: 0 0 0 2px var(--info-border); border-color: var(--info-border); }
+input[type="url"], input[type="text"], select {
+  width: 100%; height: 36px; padding: 0 10px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); outline: none; appearance: none; -webkit-appearance: none;
+}
+input:focus, select:focus { box-shadow: 0 0 0 2px var(--info-border); border-color: var(--info-border); }
 select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
 .url-wrap { position: relative; }
 .url-wrap input { padding-right: 90px; }
@@ -74,20 +75,20 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .pdf-status.ok { color: var(--success-text); }
 .pdf-status.err { color: var(--danger-text); }
 hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
-.list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
 .list-title { font-size: 13px; font-weight: 500; color: var(--text2); }
-.clear-btn { font-size: 12px; color: var(--text2); background: none; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 3px 9px; cursor: pointer; font-family: inherit; transition: background 0.1s; }
+.refresh-btn, .clear-btn { font-size: 12px; color: var(--text2); background: none; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 3px 9px; cursor: pointer; font-family: inherit; transition: background 0.1s; }
+.refresh-btn:hover { background: var(--bg2); }
 .clear-btn:hover { color: var(--danger-text); border-color: var(--danger-border); background: var(--danger-bg); }
 .entry-list { display: flex; flex-direction: column; gap: 6px; }
-.entry { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 13px; }
+.entry { display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 13px; }
 .entry-badges { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 .badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: var(--bg); border: 0.5px solid var(--border); color: var(--text2); white-space: nowrap; }
 .badge.cat { background: var(--info-bg); border-color: var(--info-border); color: var(--info-text); }
 .badge.ctr { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
 .entry-url { color: var(--text2); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.entry-link { color: var(--text3); text-decoration: none; font-size: 13px; line-height: 1; flex-shrink: 0; }
-.entry-link:hover { color: var(--info-text); }
-.del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 13px; padding: 4px 5px; border-radius: 4px; line-height: 1; flex-shrink: 0; transition: background 0.1s; }
+.entry-link, .edit-btn, .del-btn { color: var(--text3); text-decoration: none; font-size: 13px; line-height: 1; flex-shrink: 0; background: none; border: none; cursor: pointer; padding: 4px 5px; border-radius: 4px; transition: background 0.1s, color 0.1s; }
+.entry-link:hover, .edit-btn:hover { color: var(--info-text); background: var(--info-bg); }
 .del-btn:hover { color: var(--danger-text); background: var(--danger-bg); }
 .copy-btn { width: 100%; height: 38px; font-size: 14px; cursor: pointer; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); margin-top: 10px; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 7px; transition: background 0.1s; }
 .copy-btn:hover { background: var(--bg2); }
@@ -95,10 +96,10 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
 .empty-state { text-align: center; padding: 1.5rem 0; color: var(--text3); font-size: 13px; }
 .skeleton { background: var(--bg2); border-radius: var(--radius); height: 44px; animation: pulse 1.2s ease-in-out infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; width: 280px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+.modal { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; width: 100%; max-width: 320px; }
 .modal-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
-.modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 1rem; }
+.modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 1rem; line-height: 1.4; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .modal-cancel { font-size: 13px; padding: 6px 12px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); cursor: pointer; font-family: inherit; color: var(--text); }
 .modal-confirm { font-size: 13px; padding: 6px 12px; background: var(--danger-bg); border: 0.5px solid var(--danger-border); border-radius: var(--radius); cursor: pointer; font-family: inherit; color: var(--danger-text); }
@@ -128,7 +129,8 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
     <div class="lbl">Titre de l'article</div>
     <input type="text" id="titre" placeholder="Saisir le titre (ex: post LinkedIn)..." autocomplete="off" />
   </div>
-  <div class="field" style="display: none;"> <div class="lbl">URL de l'Image</div>
+  <div class="field" style="display: none;">
+    <div class="lbl">URL de l'Image</div>
     <input type="url" id="image_url" placeholder="Lien de l'image..." autocomplete="off" />
   </div>
   <div class="field-row">
@@ -182,12 +184,14 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
   </div>
   <button class="add-btn" id="add-btn" disabled>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-    <span id="add-btn-label">Ajouter à la liste</span>
+    <span id="add-btn-label">Enregistrer &amp; publier</span>
   </button>
   <hr />
   <div class="list-header">
-    <span class="list-title" id="list-title">Liste</span>
-    <button class="clear-btn" id="clear-btn" style="display:none;">Vider la liste</button>
+    <span class="list-title" id="list-title">Derniers articles</span>
+    <div style="display:flex;gap:6px;">
+      <button class="refresh-btn" id="refresh-btn" type="button">Actualiser</button>
+    </div>
   </div>
   <div id="entry-list" class="entry-list">
     <div class="skeleton"></div>
@@ -203,17 +207,15 @@ hr { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
 </div>
 
 <script>
-// ── Config Supabase ───────────────────────────────────────────────────
 const SB_URL = 'https://htufjjctlblfbmysyofx.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0dWZqamN0bGJsZmJteXN5b2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NDI3ODgsImV4cCI6MjA5NDMxODc4OH0.hb3DJWap4MKG8rnkI1AsDmKqrAuubQEZKpYbDD4px2I';
 const HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
-
 const SB_BUCKET = 'pdfs';
+const LIST_LIMIT = 50;
 
 async function uploadPdfToSupabase(file, onProgress) {
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const path = Date.now() + '_' + safeName;
-
   await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', SB_URL + '/storage/v1/object/' + SB_BUCKET + '/' + encodeURIComponent(path));
@@ -229,12 +231,14 @@ async function uploadPdfToSupabase(file, onProgress) {
     xhr.onerror = () => reject(new Error('Erreur réseau upload'));
     xhr.send(file);
   });
-
   return SB_URL + '/storage/v1/object/public/' + SB_BUCKET + '/' + encodeURIComponent(path);
 }
 
 async function sbGet() {
-  const r = await fetch(SB_URL + '/rest/v1/articles?is_published=eq.false&select=*&order=position.asc,created_at.asc', { headers: HEADERS });
+  const r = await fetch(
+    SB_URL + '/rest/v1/articles?select=*&order=created_at.desc&limit=' + LIST_LIMIT,
+    { headers: HEADERS }
+  );
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -251,27 +255,15 @@ async function sbInsert(row) {
 }
 async function sbUpdate(id, patch) {
   const r = await fetch(SB_URL + '/rest/v1/articles?id=eq.' + encodeURIComponent(id), {
-    method: 'PATCH',
-    headers: HEADERS,
-    body: JSON.stringify(patch),
+    method: 'PATCH', headers: HEADERS, body: JSON.stringify(patch),
   });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 async function sbDelete(id) {
-  const r = await fetch(SB_URL + '/rest/v1/articles?id=eq.' + id, { method: 'DELETE', headers: HEADERS });
+  const r = await fetch(SB_URL + '/rest/v1/articles?id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: HEADERS });
   if (!r.ok) throw new Error(await r.text());
 }
-async function sbDeleteAll() {
-  const r = await fetch(SB_URL + '/rest/v1/articles?is_published=eq.false', {
-    method: 'PATCH',
-    headers: HEADERS,
-    body: JSON.stringify({ is_published: true })
-  });
-  if (!r.ok) throw new Error(await r.text());
-}
-
-/** Retourne l'article existant (même URL exacte) ou null. */
 async function sbCheckDuplicate(url) {
   const r = await fetch(
     SB_URL + '/rest/v1/articles?url=eq.' + encodeURIComponent(url) +
@@ -282,7 +274,6 @@ async function sbCheckDuplicate(url) {
   const data = await r.json();
   return data[0] || null;
 }
-
 function isUniqueViolation(err) {
   const body = (err && (err.body || err.message)) || '';
   return /23505|duplicate key|unique/i.test(String(body));
@@ -291,27 +282,18 @@ function isUniqueViolation(err) {
 async function fetchOgData(url) {
   const titreInput = document.getElementById('titre');
   const imgInput = document.getElementById('image_url');
-
   try {
-    titreInput.placeholder = "⏳ Récupération par Microlink (2-3s)...";
-
-    const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+    titreInput.placeholder = '⏳ Récupération par Microlink (2-3s)...';
+    const res = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url));
     const json = await res.json();
-
     if (json.status === 'success' && json.data) {
-      if (json.data.title && !titreInput.value) {
-        titreInput.value = json.data.title;
-      }
-      if (json.data.image?.url && !imgInput.value) {
-        imgInput.value = json.data.image.url;
-      }
+      if (json.data.title && !titreInput.value) titreInput.value = json.data.title;
+      if (json.data.image?.url && !imgInput.value) imgInput.value = json.data.image.url;
     }
   } catch (e) {
-    console.error("Erreur Microlink", e);
+    console.error('Erreur Microlink', e);
   } finally {
-    if (!titreInput.value) {
-      titreInput.placeholder = "Saisir le titre (ex: post LinkedIn)...";
-    }
+    if (!titreInput.value) titreInput.placeholder = 'Saisir le titre (ex: post LinkedIn)...';
   }
 }
 
@@ -417,6 +399,26 @@ function cleanUrl(url) {
   } catch { return url; }
 }
 
+function confirmModal({ title, sub, confirmLabel }) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML =
+      '<div class="modal">' +
+      '<p class="modal-title">' + title + '</p>' +
+      '<p class="modal-sub">' + sub + '</p>' +
+      '<div class="modal-actions">' +
+      '<button type="button" class="modal-cancel">Annuler</button>' +
+      '<button type="button" class="modal-confirm">' + (confirmLabel || 'Confirmer') + '</button>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+    const close = (val) => { overlay.remove(); resolve(val); };
+    overlay.querySelector('.modal-cancel').addEventListener('click', () => close(false));
+    overlay.querySelector('.modal-confirm').addEventListener('click', () => close(true));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(false); });
+  });
+}
+
 let entries = [];
 let selEmoji = '', selContract = '', selCountry = '';
 /** @type {{ id: string, is_published?: boolean } | null} */
@@ -424,38 +426,36 @@ let pendingDup = null;
 const syncBadge = document.getElementById('sync-badge');
 const dupBanner = document.getElementById('dup-banner');
 const addBtnLabel = document.getElementById('add-btn-label');
+const urlInput = document.getElementById('url');
+const addBtn = document.getElementById('add-btn');
+const hint = document.getElementById('hint');
 
 function setSync(state, msg) {
   syncBadge.textContent = msg || '';
   syncBadge.className = 'sync-badge' + (state ? ' ' + state : '');
 }
-
 function setAddMode(mode) {
-  // mode: 'add' | 'update'
   if (mode === 'update') {
     addBtn.classList.add('update-mode');
-    addBtnLabel.textContent = 'Mettre à jour l\'existant';
+    addBtnLabel.textContent = 'Mettre à jour';
   } else {
     addBtn.classList.remove('update-mode');
-    addBtnLabel.textContent = 'Ajouter à la liste';
+    addBtnLabel.textContent = 'Enregistrer & publier';
   }
 }
-
 function showDupBanner(existing) {
   pendingDup = existing;
-  const pub = existing.is_published ? ' (déjà publié)' : ' (brouillon)';
   const prev = existing.title
     ? 'Titre actuel : « ' + existing.title + ' ».'
     : 'Sans titre pour l\'instant.';
   dupBanner.innerHTML =
-    '<strong>Article déjà en base' + pub + '.</strong><br>' +
+    '<strong>Article déjà en base (publié).</strong><br>' +
     prev + '<br>' +
-    'Ajuste titre, catégorie ou indicateurs puis clique <em>Mettre à jour l\'existant</em> pour les remplacer.';
+    'Modifie les champs puis clique <em>Mettre à jour</em>.';
   dupBanner.classList.add('visible');
   setAddMode('update');
   addBtn.disabled = false;
 }
-
 function clearDupState() {
   pendingDup = null;
   dupBanner.classList.remove('visible');
@@ -468,7 +468,7 @@ async function loadEntries() {
     setSync('syncing', '↻ chargement…');
     entries = await sbGet();
     setSync('', '');
-  } catch(e) {
+  } catch (e) {
     setSync('error', '⚠ connexion');
     entries = [];
   }
@@ -477,17 +477,17 @@ async function loadEntries() {
 
 function setEmoji(val) {
   selEmoji = val;
-  document.querySelectorAll('#grp-emoji .ind-btn').forEach(b => b.classList.toggle('ae', b.dataset.val===val));
+  document.querySelectorAll('#grp-emoji .ind-btn').forEach(b => b.classList.toggle('ae', b.dataset.val === val));
 }
 function setContract(val) {
   selContract = val;
-  document.querySelectorAll('#grp-contract .ind-btn').forEach(b => b.classList.toggle('ac', b.dataset.val===val));
+  document.querySelectorAll('#grp-contract .ind-btn').forEach(b => b.classList.toggle('ac', b.dataset.val === val));
   if (val) document.getElementById('categorie').value = 'Emploi';
   syncColC();
 }
 function setCountry(val) {
   selCountry = val;
-  document.querySelectorAll('#grp-country .ind-btn').forEach(b => b.classList.toggle('ac', b.dataset.val===val));
+  document.querySelectorAll('#grp-country .ind-btn').forEach(b => b.classList.toggle('ac', b.dataset.val === val));
 }
 function isEmploi() { return document.getElementById('categorie').value === 'Emploi'; }
 function syncColC() {
@@ -498,18 +498,15 @@ function syncColC() {
   document.getElementById('btn-intl').classList.toggle('ac', document.getElementById('categorie').value === 'International');
 }
 function valueColC() { return isEmploi() ? selCountry : document.getElementById('langue').value; }
-document.getElementById('grp-emoji').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setEmoji(b.dataset.val); });
-document.getElementById('grp-contract').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setContract(b.dataset.val); });
-document.getElementById('grp-country').addEventListener('click', e => { const b=e.target.closest('.ind-btn'); if(b) setCountry(b.dataset.val); });
+
+document.getElementById('grp-emoji').addEventListener('click', e => { const b = e.target.closest('.ind-btn'); if (b) setEmoji(b.dataset.val); });
+document.getElementById('grp-contract').addEventListener('click', e => { const b = e.target.closest('.ind-btn'); if (b) setContract(b.dataset.val); });
+document.getElementById('grp-country').addEventListener('click', e => { const b = e.target.closest('.ind-btn'); if (b) setCountry(b.dataset.val); });
 catSel.addEventListener('change', syncColC);
 document.getElementById('btn-intl').addEventListener('click', () => {
   catSel.value = catSel.value === 'International' ? '' : 'International';
   syncColC();
 });
-
-const urlInput = document.getElementById('url');
-const addBtn   = document.getElementById('add-btn');
-const hint     = document.getElementById('hint');
 
 function applyDetection(url) {
   const { cat, lang, ind, contract, country, confidence } = suggestFromUrl(url);
@@ -518,9 +515,11 @@ function applyDetection(url) {
   if (contract) setContract(contract);
   if (cat) {
     document.getElementById('categorie').value = cat;
-    hint.textContent = (confidence==='full' ? '✓ ' : '~ ') + cat;
-    hint.className = 'hint ' + (confidence==='full' ? 'full' : 'partial');
-  } else { hint.className = 'hint'; }
+    hint.textContent = (confidence === 'full' ? '✓ ' : '~ ') + cat;
+    hint.className = 'hint ' + (confidence === 'full' ? 'full' : 'partial');
+  } else {
+    hint.className = 'hint';
+  }
   syncColC();
   if (country && isEmploi()) setCountry(country);
 }
@@ -532,11 +531,12 @@ function resetForm() {
   document.getElementById('langue').value = '';
   catSel.value = '';
   setEmoji(''); setContract(''); setCountry(''); syncColC();
-  addBtn.disabled = true; hint.className = 'hint';
+  addBtn.disabled = true;
+  hint.className = 'hint';
   clearDupState();
 }
 
-function buildPayload(url) {
+function buildPayload() {
   return {
     title: document.getElementById('titre').value.trim() || null,
     image_url: document.getElementById('image_url').value.trim() || null,
@@ -546,55 +546,73 @@ function buildPayload(url) {
   };
 }
 
-let urlCheckTimeout;
+function parseIndicateur(raw) {
+  const ind = String(raw || '');
+  const contracts = ['CDI', 'CDD', 'Freelance', 'Alternance', 'Stage'];
+  let contract = '';
+  for (const c of contracts) {
+    if (ind.includes(c)) { contract = c; break; }
+  }
+  const emoji = ind.replace(/CDI|CDD|Freelance|Alternance|Stage/g, '').trim();
+  return { emoji, contract };
+}
 
+function fillFormFromArticle(article) {
+  urlInput.value = article.url || '';
+  document.getElementById('titre').value = article.title || '';
+  document.getElementById('image_url').value = article.image_url || '';
+  if (article.categorie) catSel.value = article.categorie;
+  syncColC();
+  if (isEmploi()) {
+    setCountry(article.langue || '');
+  } else {
+    document.getElementById('langue').value = article.langue || '';
+  }
+  const { emoji, contract } = parseIndicateur(article.indicateur);
+  setEmoji(emoji);
+  if (contract) setContract(contract);
+  else setContract('');
+  showDupBanner(article);
+  hint.textContent = '✎ Édition';
+  hint.className = 'hint partial';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+let urlCheckTimeout;
 async function handleUrlChange() {
   const url = urlInput.value.trim();
   const cleaned = cleanUrl(url);
-
   if (url !== cleaned && cleaned !== '') urlInput.value = cleaned;
-
   clearDupState();
-
   if (!cleaned) {
     addBtn.disabled = true;
     hint.className = 'hint';
     return;
   }
-
   applyDetection(cleaned);
-
   setSync('syncing', '↻ vérification…');
   try {
     const existing = await sbCheckDuplicate(cleaned);
-
     if (existing) {
       setSync('', '');
       hint.textContent = '⚠ Déjà en base';
       hint.className = 'hint danger';
       showDupBanner(existing);
-      // Préremplit avec les valeurs actuelles pour faciliter l'édition
       if (existing.title && !document.getElementById('titre').value) {
         document.getElementById('titre').value = existing.title;
       }
       if (existing.categorie) catSel.value = existing.categorie;
       if (existing.langue) {
-        if (isEmploi()) {
-          // langue stockée peut être un emoji pays
-          setCountry(existing.langue);
-        } else {
-          document.getElementById('langue').value = existing.langue;
-        }
+        if (isEmploi()) setCountry(existing.langue);
+        else document.getElementById('langue').value = existing.langue;
       }
       syncColC();
       return;
     }
-
     setSync('', '');
     addBtn.disabled = false;
     setAddMode('add');
     fetchOgData(cleaned);
-
   } catch (e) {
     setSync('error', '⚠ erreur réseau');
   }
@@ -604,14 +622,11 @@ const pdfBtn = document.getElementById('pdf-btn');
 const pdfInput = document.getElementById('pdf-input');
 const pdfStatus = document.getElementById('pdf-status');
 const pdfBtnLabel = document.getElementById('pdf-btn-label');
-
 function setPdfStatus(msg, state) {
   pdfStatus.textContent = msg || '';
   pdfStatus.className = 'pdf-status' + (state ? ' ' + state : '');
 }
-
 pdfBtn.addEventListener('click', () => pdfInput.click());
-
 pdfInput.addEventListener('change', async () => {
   const file = pdfInput.files && pdfInput.files[0];
   if (!file) return;
@@ -620,14 +635,11 @@ pdfInput.addEventListener('change', async () => {
     pdfInput.value = '';
     return;
   }
-
   pdfBtn.disabled = true;
   pdfBtnLabel.textContent = 'Upload en cours…';
   setPdfStatus('↻ Envoi du PDF…');
-
   try {
     const link = await uploadPdfToSupabase(file, (pct) => setPdfStatus('↻ Envoi… ' + pct + '%'));
-
     urlInput.value = link;
     hint.className = 'hint';
     const titreInput = document.getElementById('titre');
@@ -635,7 +647,6 @@ pdfInput.addEventListener('change', async () => {
     addBtn.disabled = false;
     clearDupState();
     setAddMode('add');
-
     setPdfStatus('✓ PDF uploadé — lien ajouté au champ URL.', 'ok');
   } catch (e) {
     console.error(e);
@@ -648,7 +659,6 @@ pdfInput.addEventListener('change', async () => {
 });
 
 urlInput.addEventListener('paste', () => setTimeout(handleUrlChange, 50));
-
 urlInput.addEventListener('input', () => {
   addBtn.disabled = true;
   clearDupState();
@@ -657,41 +667,41 @@ urlInput.addEventListener('input', () => {
 });
 
 addBtn.addEventListener('click', async () => {
-  const url = urlInput.value.trim(); if (!url) return;
+  const url = urlInput.value.trim();
+  if (!url) return;
   addBtn.disabled = true;
-
-  const fields = buildPayload(url);
-
+  const fields = buildPayload();
   try {
-    // ── Mise à jour d'un doublon ──
     if (pendingDup && pendingDup.id) {
       setSync('syncing', '↻ mise à jour…');
-      const [updated] = await sbUpdate(pendingDup.id, fields);
-      // Rafraîchir la liste locale si l'article y est encore (brouillon)
+      const patch = { ...fields, is_published: true };
+      const [updated] = await sbUpdate(pendingDup.id, patch);
       const idx = entries.findIndex(e => e.id === pendingDup.id);
       if (idx >= 0 && updated) entries[idx] = { ...entries[idx], ...updated };
+      else if (updated) {
+        entries = [updated, ...entries.filter(e => e.id !== updated.id)].slice(0, LIST_LIMIT);
+      }
       setSync('', '');
       renderList();
       resetForm();
       return;
     }
 
-    // ── Insert normal ──
     const row = {
       url,
       ...fields,
-      position: entries.length ? Math.max(...entries.map(e => e.position || 0)) + 1 : 1,
+      is_published: true,
+      position: entries.length ? Math.max(...entries.map(e => e.position || 0), 0) + 1 : 1,
     };
 
-    setSync('syncing', '↻ sauvegarde…');
+    setSync('syncing', '↻ publication…');
     try {
       const [saved] = await sbInsert(row);
-      entries.push(saved);
+      entries = [saved, ...entries].slice(0, LIST_LIMIT);
       setSync('', '');
       renderList();
       resetForm();
     } catch (insertErr) {
-      // Index unique (URL normalisée) : proposer la mise à jour
       if (isUniqueViolation(insertErr)) {
         const existing = await sbCheckDuplicate(url);
         if (existing) {
@@ -705,74 +715,80 @@ addBtn.addEventListener('click', async () => {
       }
       throw insertErr;
     }
-  } catch(e) {
+  } catch (e) {
     console.error(e);
     setSync('error', '⚠ erreur sauvegarde');
     addBtn.disabled = false;
   }
 });
 
-document.getElementById('clear-btn').addEventListener('click', () => {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.innerHTML = '<div class="modal"><p class="modal-title">Vider la liste ?</p><p class="modal-sub">Cette action publiera tous les brouillons (is_published = true).</p><div class="modal-actions"><button class="modal-cancel">Annuler</button><button class="modal-confirm">Vider</button></div></div>';
-  document.body.appendChild(overlay);
-  overlay.querySelector('.modal-cancel').addEventListener('click', () => overlay.remove());
-  overlay.querySelector('.modal-confirm').addEventListener('click', async () => {
-    overlay.remove();
-    try {
-      setSync('syncing', '↻ publication…');
-      await sbDeleteAll();
-      entries = [];
-      setSync('', '');
-      renderList();
-    } catch(e) { setSync('error', '⚠ erreur suppression'); }
+document.getElementById('refresh-btn').addEventListener('click', () => loadEntries());
+
+async function deleteArticle(id) {
+  const entry = entries.find(e => e.id === id);
+  const label = entry?.title || entry?.url || 'cet article';
+  const ok = await confirmModal({
+    title: 'Supprimer cet article ?',
+    sub: '« ' + String(label).slice(0, 80) + ' » sera retiré de la base et de l\'app (dépublication).',
+    confirmLabel: 'Supprimer',
   });
-});
+  if (!ok) return;
+  try {
+    setSync('syncing', '↻ suppression…');
+    await sbDelete(id);
+    entries = entries.filter(e => e.id !== id);
+    if (pendingDup && pendingDup.id === id) resetForm();
+    setSync('', '');
+    renderList();
+  } catch (e) {
+    console.error(e);
+    setSync('error', '⚠ erreur suppression');
+  }
+}
 
 function renderList() {
-  const el     = document.getElementById('entry-list');
-  const wrap   = document.getElementById('copy-wrap');
-  const clearB = document.getElementById('clear-btn');
-  document.getElementById('list-title').textContent = entries.length ? 'Liste (' + entries.length + ')' : 'Liste';
-  clearB.style.display = entries.length ? '' : 'none';
+  const el = document.getElementById('entry-list');
+  const wrap = document.getElementById('copy-wrap');
+  document.getElementById('list-title').textContent = entries.length
+    ? 'Derniers articles (' + entries.length + ')'
+    : 'Derniers articles';
   if (!entries.length) {
-    el.innerHTML = '<div class="empty-state">Aucun article ajouté pour l\'instant</div>';
-    wrap.style.display = 'none'; return;
+    el.innerHTML = '<div class="empty-state">Aucun article pour l\'instant</div>';
+    wrap.style.display = 'none';
+    return;
   }
   wrap.style.display = 'block';
   el.innerHTML = entries.map((e) => {
-    const domain = (() => { try { return new URL(e.url).hostname.replace(/^www\./,''); } catch { return e.url; } })();
+    const domain = (() => { try { return new URL(e.url).hostname.replace(/^www\./, ''); } catch { return e.url; } })();
     const ind = e.indicateur || '';
     const ctr = (ind.match(/CDI|CDD|Freelance|Alternance|Stage/) || [''])[0];
-    const emj = ind.replace(/CDI|CDD|Freelance|Alternance|Stage/g,'').trim();
-    return '<div class="entry" data-id="' + e.id + '">'
-      + '<div class="entry-badges">'
-      + (e.langue ? '<span class="badge">' + e.langue + '</span>' : '')
-      + (emj ? '<span class="badge">' + emj + '</span>' : '')
-      + (ctr ? '<span class="badge ctr">' + ctr + '</span>' : '')
-      + (e.categorie ? '<span class="badge cat">' + e.categorie + '</span>' : '')
-      + '</div>'
-      + '<span class="entry-url" title="' + e.url + '">' + domain + '</span>'
-      + '<a href="' + e.url + '" target="_blank" rel="noopener" class="entry-link" aria-label="Ouvrir">'
-      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
-      + '</a>'
-      + '<button class="del-btn" data-id="' + e.id + '" aria-label="Supprimer">'
-      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>'
-      + '</button></div>';
+    const emj = ind.replace(/CDI|CDD|Freelance|Alternance|Stage/g, '').trim();
+    return '<div class="entry" data-id="' + e.id + '">' +
+      '<div class="entry-badges">' +
+      (e.langue ? '<span class="badge">' + e.langue + '</span>' : '') +
+      (emj ? '<span class="badge">' + emj + '</span>' : '') +
+      (ctr ? '<span class="badge ctr">' + ctr + '</span>' : '') +
+      (e.categorie ? '<span class="badge cat">' + e.categorie + '</span>' : '') +
+      '</div>' +
+      '<span class="entry-url" title="' + (e.title || e.url) + '">' + domain + '</span>' +
+      '<a href="' + e.url + '" target="_blank" rel="noopener" class="entry-link" aria-label="Ouvrir" title="Ouvrir">' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' +
+      '</a>' +
+      '<button type="button" class="edit-btn" data-id="' + e.id + '" aria-label="Éditer" title="Éditer">' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' +
+      '</button>' +
+      '<button type="button" class="del-btn" data-id="' + e.id + '" aria-label="Supprimer" title="Supprimer">' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>' +
+      '</button></div>';
   }).join('');
 
   el.querySelectorAll('.del-btn').forEach(b => {
-    b.addEventListener('click', async () => {
-      const id = b.dataset.id;
-      b.disabled = true;
-      try {
-        setSync('syncing', '↻');
-        await sbDelete(id);
-        entries = entries.filter(e => e.id !== id);
-        setSync('', '');
-        renderList();
-      } catch(e) { setSync('error', '⚠ erreur'); b.disabled = false; }
+    b.addEventListener('click', () => deleteArticle(b.dataset.id));
+  });
+  el.querySelectorAll('.edit-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      const article = entries.find(e => e.id === b.dataset.id);
+      if (article) fillFormFromArticle(article);
     });
   });
 }
@@ -785,7 +801,6 @@ document.getElementById('copy-btn').addEventListener('click', () => {
     e.url + '\t' +
     (e.categorie || '') + ' '
   ).join('\n');
-
   navigator.clipboard.writeText(tsv).then(() => {
     const btn = document.getElementById('copy-btn');
     btn.classList.add('ok');
