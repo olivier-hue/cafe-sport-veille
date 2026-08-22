@@ -1,1 +1,302 @@
-PLACEHOLDER_WILL_FAIL_IF_TOO_LARGE
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Café du Sport Business — Saisie articles</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff; --bg2: #f5f4f0; --bg3: #eceae4;
+  --text: #1a1a18; --text2: #6b6a65; --text3: #a09e99;
+  --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+  --info-bg: #e6f1fb; --info-border: rgba(24,95,165,0.3); --info-text: #185fa5;
+  --success-bg: #eaf3de; --success-border: rgba(59,109,17,0.3); --success-text: #3b6d11;
+  --warn-bg: #faeeda; --warn-border: rgba(186,117,23,0.3); --warn-text: #854f0b;
+  --danger-bg: #fcebeb; --danger-border: rgba(163,45,45,0.3); --danger-text: #a32d2d;
+  --radius: 8px; --radius-lg: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e1c; --bg2: #2a2a28; --bg3: #333330;
+    --text: #f0efe9; --text2: #a09e99; --text3: #6b6a65;
+    --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.22);
+    --info-bg: #042c53; --info-border: rgba(55,138,221,0.3); --info-text: #85b7eb;
+    --success-bg: #173404; --success-border: rgba(99,153,34,0.3); --success-text: #97c459;
+    --warn-bg: #412402; --warn-border: rgba(239,159,39,0.3); --warn-text: #ef9f27;
+    --danger-bg: #501313; --danger-border: rgba(226,75,74,0.3); --danger-text: #f09595;
+  }
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; display: flex; justify-content: center; padding: 2rem 1rem 4rem; }
+.card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; width: 100%; max-width: 620px; height: fit-content; }
+.app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--border); }
+.app-title { font-size: 13px; font-weight: 500; color: var(--text2); }
+.sync-badge { font-size: 11px; padding: 2px 7px; border-radius: 4px; color: var(--text3); }
+.sync-badge.syncing { color: var(--info-text); }
+.sync-badge.error { color: var(--danger-text); }
+.lbl { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+.field { margin-bottom: 10px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+input[type="url"], input[type="text"], select {
+  width: 100%; height: 36px; padding: 0 10px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); outline: none; appearance: none; -webkit-appearance: none;
+}
+input:focus, select:focus { box-shadow: 0 0 0 2px var(--info-border); border-color: var(--info-border); }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+.url-wrap { position: relative; }
+.url-wrap input { padding-right: 90px; }
+.hint { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; padding: 2px 7px; border-radius: 4px; pointer-events: none; display: none; white-space: nowrap; }
+.hint.full { display: block; background: var(--success-bg); border: 0.5px solid var(--success-border); color: var(--success-text); }
+.hint.partial { display: block; background: var(--warn-bg); border: 0.5px solid var(--warn-border); color: var(--warn-text); }
+.hint.danger { display: block; background: var(--danger-bg); border: 0.5px solid var(--danger-border); color: var(--danger-text); }
+.ind-wrap { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+#btn-intl { width: 100%; margin-top: 5px; height: 30px; }
+#grp-country { gap: 4px; }
+#grp-country .ind-btn { min-width: 0; padding: 0 7px; height: 36px; }
+.ind-btn { height: 32px; min-width: 40px; padding: 0 9px; font-size: 15px; cursor: pointer; background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); border-radius: var(--radius); font-family: inherit; transition: background 0.1s; }
+.ind-btn:hover { background: var(--bg2); }
+.ind-btn.sm { font-size: 12px; font-weight: 500; }
+.ind-btn.muted { color: var(--text2); font-size: 12px; }
+.ind-btn.ae { background: var(--info-bg); border-color: var(--info-border); }
+.ind-btn.ac { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
+.sep { width: 1px; height: 24px; background: var(--border2); flex-shrink: 0; }
+.add-btn { width: 100%; height: 38px; font-size: 14px; font-weight: 500; cursor: pointer; background: var(--text); color: var(--bg); border: none; border-radius: var(--radius); font-family: inherit; margin-top: 4px; transition: opacity 0.1s; }
+.add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.add-btn.update-mode { background: var(--info-text); }
+.dup-banner { display: none; padding: 10px 12px; background: var(--warn-bg); border: 0.5px solid var(--warn-border); border-radius: var(--radius); font-size: 13px; color: var(--warn-text); margin-bottom: 10px; }
+.dup-banner.visible { display: block; }
+.list-header { display: flex; align-items: center; justify-content: space-between; margin: 1.5rem 0 0.75rem; }
+.list-title { font-size: 13px; font-weight: 500; color: var(--text2); }
+.list-actions { display: flex; gap: 6px; }
+.refresh-btn, .clear-btn { font-size: 12px; color: var(--text2); background: none; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 3px 9px; cursor: pointer; font-family: inherit; transition: background 0.1s; }
+.refresh-btn:hover { background: var(--bg2); }
+.clear-btn:hover { color: var(--danger-text); border-color: var(--danger-border); background: var(--danger-bg); }
+.entry-list { display: flex; flex-direction: column; gap: 6px; }
+.entry { display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 13px; }
+.entry-badges { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: var(--bg); border: 0.5px solid var(--border); color: var(--text2); white-space: nowrap; }
+.badge.cat { background: var(--info-bg); border-color: var(--info-border); color: var(--info-text); }
+.badge.ctr { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
+.entry-url { color: var(--text2); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.entry-link, .edit-btn, .del-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; border: 0.5px solid var(--border); background: var(--bg); color: var(--text2); cursor: pointer; text-decoration: none; flex-shrink: 0; }
+.entry-link:hover, .edit-btn:hover { background: var(--bg3); }
+.del-btn:hover { color: var(--danger-text); border-color: var(--danger-border); background: var(--danger-bg); }
+.empty-state { font-size: 13px; color: var(--text3); text-align: center; padding: 1.5rem 1rem; }
+.skeleton { height: 48px; background: var(--bg2); border-radius: var(--radius); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+#copy-wrap { margin-top: 1rem; display: none; }
+.copy-btn { width: 100%; height: 36px; font-size: 13px; cursor: pointer; background: var(--bg2); color: var(--text); border: 0.5px solid var(--border); border-radius: var(--radius); font-family: inherit; }
+.copy-btn:hover { background: var(--bg3); }
+.pdf-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.pdf-row input[type=file] { font-size: 12px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg); border-radius: var(--radius-lg); padding: 1.25rem; max-width: 360px; width: 100%; border: 0.5px solid var(--border); }
+.modal h3 { font-size: 15px; margin-bottom: 6px; }
+.modal p { font-size: 13px; color: var(--text2); margin-bottom: 1rem; line-height: 1.4; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.modal-actions button { height: 34px; padding: 0 14px; font-size: 13px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--bg); cursor: pointer; font-family: inherit; }
+.modal-actions .confirm { background: var(--danger-text); color: #fff; border-color: transparent; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="app-header">
+    <span class="app-title">Café du Sport Business — Saisie</span>
+    <span class="sync-badge" id="sync-badge"></span>
+  </div>
+
+  <div class="dup-banner" id="dup-banner"></div>
+
+  <div class="field">
+    <div class="lbl">URL</div>
+    <div class="url-wrap">
+      <input type="url" id="url" placeholder="https://…" autocomplete="off" />
+      <span class="hint" id="url-hint"></span>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <div class="lbl">Catégorie</div>
+      <select id="categorie">
+        <option value="">—</option>
+        <option>Sponsoring</option>
+        <option>Médias</option>
+        <option>Droits TV</option>
+        <option>Marketing</option>
+        <option>Digital</option>
+        <option>Fan expérience</option>
+        <option>RSE</option>
+        <option>Économie</option>
+        <option>Juridique</option>
+        <option>Emploi</option>
+        <option>International</option>
+        <option>Autre</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="lbl" id="lbl-c">Langue (col. C)</div>
+      <select id="langue">
+        <option value="">—</option>
+        <option>FR</option>
+        <option>EN</option>
+        <option>ES</option>
+        <option>DE</option>
+        <option>IT</option>
+        <option>PT</option>
+        <option>Autre</option>
+      </select>
+      <div class="ind-wrap" id="grp-country" style="display:none; margin-top:6px;">
+        <button type="button" class="ind-btn sm" data-val="FR">FR</button>
+        <button type="button" class="ind-btn sm" data-val="EU">EU</button>
+        <button type="button" class="ind-btn sm" data-val="US">US</button>
+        <button type="button" class="ind-btn sm" data-val="UK">UK</button>
+        <button type="button" class="ind-btn sm" data-val="Monde">Monde</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="lbl">Indicateur</div>
+    <div class="ind-wrap" id="grp-emoji">
+      <button type="button" class="ind-btn" data-val="🔥">🔥</button>
+      <button type="button" class="ind-btn" data-val="⭐">⭐</button>
+      <button type="button" class="ind-btn" data-val="💡">💡</button>
+      <button type="button" class="ind-btn" data-val="📌">📌</button>
+      <button type="button" class="ind-btn muted" data-val="">∅</button>
+    </div>
+  </div>
+
+  <div class="field" id="grp-contract-wrap">
+    <div class="lbl">Type de contrat (Emploi)</div>
+    <div class="ind-wrap" id="grp-contract">
+      <button type="button" class="ind-btn sm" data-val="CDI">CDI</button>
+      <button type="button" class="ind-btn sm" data-val="CDD">CDD</button>
+      <button type="button" class="ind-btn sm" data-val="Freelance">Freelance</button>
+      <button type="button" class="ind-btn sm" data-val="Alternance">Alternance</button>
+      <button type="button" class="ind-btn sm" data-val="Stage">Stage</button>
+      <button type="button" class="ind-btn muted sm" data-val="">∅</button>
+    </div>
+  </div>
+
+  <button type="button" class="ind-btn sm" id="btn-intl">International</button>
+
+  <div class="field" style="margin-top:10px;">
+    <div class="lbl">Titre (optionnel)</div>
+    <input type="text" id="title" placeholder="Laissé vide = OG title" />
+  </div>
+
+  <div class="pdf-row">
+    <input type="file" id="pdf" accept="application/pdf" />
+  </div>
+
+  <button type="button" class="add-btn" id="add-btn" disabled>Ajouter</button>
+
+  <div class="list-header">
+    <span class="list-title" id="list-title">Liste</span>
+    <div class="list-actions">
+      <button class="refresh-btn" id="refresh-btn" type="button">Actualiser</button>
+      <button class="clear-btn" id="clear-btn" type="button" style="display:none;">Vider la liste</button>
+    </div>
+  </div>
+  <div id="entry-list" class="entry-list">
+    <div class="skeleton"></div>
+    <div class="skeleton" style="opacity:.6"></div>
+    <div class="skeleton" style="opacity:.3"></div>
+  </div>
+  <div id="copy-wrap">
+    <button type="button" class="copy-btn" id="copy-btn">Copier la liste (Excel)</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <p id="modal-sub"></p>
+    <div class="modal-actions">
+      <button type="button" id="modal-cancel">Annuler</button>
+      <button type="button" class="confirm" id="modal-confirm">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://htufjjctlblfbmysyofx.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0dWZqamN0bGJsZmJteXN5b2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NDI3ODgsImV4cCI6MjA5NDMxODc4OH0.hb3DJWap4MKG8rnkI1AsDmKqrAuubQEZKpYbDD4px2I';
+const HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+const SB_BUCKET = 'pdfs';
+
+async function uploadPdfToSupabase(file, onProgress) {
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const path = Date.now() + '_' + safeName;
+  await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', SB_URL + '/storage/v1/object/' + SB_BUCKET + '/' + encodeURIComponent(path));
+    xhr.setRequestHeader('apikey', SB_KEY);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + SB_KEY);
+    xhr.setRequestHeader('Content-Type', 'application/pdf');
+    xhr.setRequestHeader('x-upsert', 'false');
+    if (onProgress) xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100)); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error('Storage ' + xhr.status + ': ' + xhr.responseText));
+    };
+    xhr.onerror = () => reject(new Error('Erreur réseau upload'));
+    xhr.send(file);
+  });
+  return SB_URL + '/storage/v1/object/public/' + SB_BUCKET + '/' + encodeURIComponent(path);
+}
+
+/** Début de la journée locale (navigateur), en ISO UTC pour PostgREST. */
+function startOfTodayIso() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  return start.toISOString();
+}
+
+/** Tous les articles encore visibles dans la liste de saisie (sans filtre de date). */
+async function sbGet() {
+  const qs =
+    'select=*' +
+    '&is_published=eq.true' +
+    '&saisie_visible=eq.true' +
+    '&order=created_at.desc';
+  const r = await fetch(SB_URL + '/rest/v1/articles?' + qs, {
+    headers: { ...HEADERS, 'Range': '0-9999', 'Prefer': 'count=exact' },
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+/** Articles du jour encore visibles (utilisé par Actualiser pour fusionner). */
+async function sbGetToday() {
+  const since = startOfTodayIso();
+  const qs =
+    'select=*' +
+    '&is_published=eq.true' +
+    '&saisie_visible=eq.true' +
+    '&created_at=gte.' + encodeURIComponent(since) +
+    '&order=created_at.desc';
+  const r = await fetch(SB_URL + '/rest/v1/articles?' + qs, {
+    headers: { ...HEADERS, 'Range': '0-9999', 'Prefer': 'count=exact' },
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+/** Masque tous les articles visibles de la liste de saisie (partout), sans dépublier. */
+async function sbClearSaisieList() {
+  const qs = 'saisie_visible=eq.true';
+  const r = await fetch(SB_URL + '/rest/v1/articles?' + qs, {
+    method: 'PATCH',
+    headers: HEADERS,
+    body: JSON.stringify({ saisie_visible: false }),
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+</script>
+</body>
+</html>
