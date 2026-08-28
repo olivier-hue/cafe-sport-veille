@@ -256,13 +256,12 @@ async function sbGet() {
   return r.json();
 }
 
-/** Articles du jour encore visibles (utilisé par Actualiser pour fusionner). */
+/** Tous les articles publiés du jour (ignore saisie_visible — pour Actualiser). */
 async function sbGetToday() {
   const since = startOfTodayIso();
   const qs =
     'select=*' +
     '&is_published=eq.true' +
-    '&saisie_visible=eq.true' +
     '&created_at=gte.' + encodeURIComponent(since) +
     '&order=created_at.desc';
   const r = await fetch(SB_URL + '/rest/v1/articles?' + qs, {
@@ -270,6 +269,18 @@ async function sbGetToday() {
   });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
+}
+
+/** Remet saisie_visible=true sur les articles du jour (après Actualiser). */
+async function sbRestoreTodaySaisieVisible() {
+  const since = startOfTodayIso();
+  const qs = 'is_published=eq.true&created_at=gte.' + encodeURIComponent(since);
+  const r = await fetch(SB_URL + '/rest/v1/articles?' + qs, {
+    method: 'PATCH',
+    headers: HEADERS,
+    body: JSON.stringify({ saisie_visible: true }),
+  });
+  if (!r.ok) throw new Error(await r.text());
 }
 
 /** Masque tous les articles visibles de la liste de saisie (partout), sans dépublier. */
@@ -776,11 +787,8 @@ document.getElementById('refresh-btn').addEventListener('click', async () => {
   try {
     setSync('syncing', '↻ actualisation…');
     const today = await sbGetToday();
-    const byId = new Map(entries.map(e => [e.id, e]));
-    for (const a of today) byId.set(a.id, a);
-    entries = Array.from(byId.values()).sort((a, b) =>
-      new Date(b.created_at) - new Date(a.created_at)
-    );
+    await sbRestoreTodaySaisieVisible();
+    entries = today.map((a) => ({ ...a, saisie_visible: true }));
     setSync('', '');
   } catch (e) {
     console.error(e);
